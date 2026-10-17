@@ -22,6 +22,14 @@ describe('estSurPageFootball', () => {
     expect(estSurPageFootball(betclic, 'https://www.betclic.fr/football-sfootball?x=1')).toBe(true);
   });
 
+  it('accepte la page football sans www', () => {
+    expect(estSurPageFootball(betclic, 'https://betclic.fr/football-sfootball/')).toBe(true);
+  });
+
+  it('refuse le même chemin sur un autre site', () => {
+    expect(estSurPageFootball(betclic, 'https://www.winamax.fr/football-sfootball')).toBe(false);
+  });
+
   it('refuse les pages de championnat ou de Match', () => {
     expect(estSurPageFootball(betclic, 'https://www.betclic.fr/football-sfootball/ligue-1-c4')).toBe(false);
   });

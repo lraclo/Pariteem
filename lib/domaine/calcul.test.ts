@@ -34,8 +34,8 @@ describe('phaseDepot', () => {
     expect(resultat.lignes[0]!.net).toBeCloseTo(-250);
   });
 
-  it('donne la perte maximale au Pire cas', () => {
-    expect(resultat.perteMax).toBeCloseTo(250);
+  it('donne le pire résultat net au Pire cas', () => {
+    expect(resultat.pireNet).toBeCloseTo(-250);
   });
 });
 
@@ -68,12 +68,14 @@ describe('phaseFreebet', () => {
     expect(resultat.lignes.filter((l) => l.mise === 'depot')).toHaveLength(1);
   });
 
-  it('rend la mise quand le Bookmaker rembourse en argent retirable', () => {
-    const ligne = phaseFreebet(paire, 100, { miseRendue: true }).lignes[0]!;
-    expect(ligne.gain).toBeCloseTo(100 * 2.5 * 2.6);
+  it('traite un remboursement en argent retirable comme de l’argent réel', () => {
+    const resultat = phaseFreebet(paire, 100, { miseRendue: true });
+    expect(resultat.lignes[0]!.gain).toBeCloseTo(100 * 2.5 * 2.6);
+    expect(resultat.misesReelles).toBe(900);
+    expect(resultat.pireNet).toBeCloseTo(phaseDepot(paire, 100).pireNet);
   });
 
   it("n'a pas de perte quand toutes les Cotes combinées dépassent 2", () => {
-    expect(phaseFreebet(paire, 100).perteMax).toBe(0);
+    expect(phaseFreebet(paire, 100).pireNet).toBeGreaterThan(0);
   });
 });

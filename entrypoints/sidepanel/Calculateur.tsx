@@ -31,8 +31,6 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
   if (conditions.coteMinCombine && resultat.pireCas < conditions.coteMinCombine)
     alertes.push(`Le Pire cas est sous la cote minimale du combiné (${formatCote(conditions.coteMinCombine)}).`);
 
-  const pireNet = Math.min(...resultat.lignes.map((l) => l.net));
-
   return (
     <section className="calculateur">
       <h2>Paire : {paire[0].equipeDomicile} / {paire[1].equipeDomicile}</h2>
@@ -45,8 +43,8 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
         <div><dt>Pire cas</dt><dd>{formatCote(resultat.pireCas)}</dd></div>
         <div><dt>Argent réel</dt><dd>{formatEuros(resultat.misesReelles)}</dd></div>
         <div>
-          <dt>{pireNet < 0 ? 'Perte max' : 'Gain min'}</dt>
-          <dd className={pireNet < 0 ? 'negatif' : 'positif'}>{formatEuros(Math.abs(pireNet))}</dd>
+          <dt>{resultat.pireNet < 0 ? 'Perte max' : 'Gain min'}</dt>
+          <dd className={resultat.pireNet < 0 ? 'negatif' : 'positif'}>{formatEuros(Math.abs(resultat.pireNet))}</dd>
         </div>
       </dl>
       {alertes.map((a) => <p key={a} className="erreur">{a}</p>)}

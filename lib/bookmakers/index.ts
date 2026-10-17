@@ -40,6 +40,9 @@ export function bookmakerPourUrl(url: string | undefined): Bookmaker | null {
   return BOOKMAKERS.find((b) => hote === b.domaine || hote.endsWith(`.${b.domaine}`)) ?? null;
 }
 
+/** Vrai sur la page football du Bookmaker, quel que soit le sous-domaine ou les paramètres. */
 export function estSurPageFootball(bookmaker: Bookmaker, url: string | undefined): boolean {
-  return !!url && url.split(/[?#]/)[0]!.replace(/\/$/, '') === bookmaker.urlFootball;
+  if (bookmakerPourUrl(url)?.id !== bookmaker.id) return false;
+  const chemin = (u: string) => new URL(u).pathname.replace(/\/$/, '');
+  return chemin(url!) === chemin(bookmaker.urlFootball);
 }

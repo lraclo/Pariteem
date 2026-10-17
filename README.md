@@ -24,7 +24,7 @@ Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Paritee
 ## Utiliser
 
 1. Ouvrir Winamax ou Betclic : l'icône affiche un ✓.
-2. Cliquer sur l'icône. Dans Chrome, le panneau latéral s'ouvre à droite de la page. Arc n'affiche pas les panneaux latéraux d'extension : Pariteem s'y ouvre dans une fenêtre séparée, qui suit l'onglet que vous regardez. Chrome est recommandé.
+2. Cliquer sur l'icône. Dans Chrome, le panneau latéral s'ouvre à droite de la page. Arc n'affiche pas les panneaux latéraux d'extension : utilisez **Option + Maj + P** (ou clic droit sur l'icône › « Ouvrir dans une fenêtre ») pour ouvrir Pariteem dans une fenêtre séparée qui suit l'onglet regardé ; les clics suivants ouvriront aussi la fenêtre. Chrome est recommandé.
 3. Régler le **Seuil** (Cote plancher minimale), la **Fenêtre** (3 semaines par défaut, 48 h pour un cycle rapide) et le **Tri**.
 4. **Chercher**.
    - Winamax : la page football est lue d'un coup, depuis n'importe quelle page du site.
@@ -37,7 +37,7 @@ Les réglages sont mémorisés, pas les résultats : les Cotes bougent, relancez
 ## Développer
 
 ```bash
-npm run dev      # ouvre un Chrome de test avec l'extension et rechargement automatique
+npm run dev      # reconstruit et recharge l'extension à chaque modification (charger .output/chrome-mv3-dev une fois)
 npm test         # tests du Classement, du calculateur et des lecteurs de pages
 npm run compile  # vérification TypeScript
 ```

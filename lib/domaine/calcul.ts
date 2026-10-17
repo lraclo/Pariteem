@@ -20,8 +20,8 @@ export interface ResultatPhase {
   lignes: Ligne[];
   misesReelles: number;
   pireCas: number;
-  /** Plus grosse perte possible sur la Phase, 0 si aucune Combinaison ne fait perdre. */
-  perteMax: number;
+  /** Plus faible résultat net : une perte s'il est négatif, sinon le gain garanti. */
+  pireNet: number;
 }
 
 export function combinaisons([a, b]: Paire): Combinaison[] {
@@ -43,7 +43,8 @@ function resultat(
   types: TypeMise[],
   miseRendue = false,
 ): ResultatPhase {
-  const misesReelles = types.filter((t) => t === 'depot').length * mise;
+  // Un remboursement en cash est de l'argent retirable : le remiser, c'est risquer de l'argent réel.
+  const misesReelles = types.filter((t) => t === 'depot' || miseRendue).length * mise;
   const lignes = combinaisons(paire).map((combinaison, i): Ligne => {
     const type = types[i] ?? 'depot';
     const gain =
@@ -52,12 +53,11 @@ function resultat(
         : mise * (combinaison.coteCombinee - 1);
     return { combinaison, mise: type, gain, net: gain - misesReelles };
   });
-  const pireNet = Math.min(...lignes.map((l) => l.net));
   return {
     lignes,
     misesReelles,
     pireCas: pireCas(paire),
-    perteMax: Math.max(0, -pireNet),
+    pireNet: Math.min(...lignes.map((l) => l.net)),
   };
 }
 

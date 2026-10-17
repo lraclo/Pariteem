@@ -19,8 +19,9 @@ function jourDuGroupe(titre: string, heure: number, maintenant: Date): Date | nu
   const demain = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() + 1);
   if (titre === "Aujourd'hui") return aujourdhui;
   if (titre === 'Demain') return demain;
-  // « Cette nuit » regroupe les Matchs d'après minuit.
-  if (titre === 'Cette nuit') return heure < 12 ? demain : aujourdhui;
+  // « Cette nuit » regroupe les Matchs d'après minuit : la nuit qui vient, ou celle
+  // qu'on est en train de vivre si l'on cherche soi-même après minuit.
+  if (titre === 'Cette nuit') return heure < 12 && maintenant.getHours() >= 12 ? demain : aujourdhui;
   const [, jj, mois] = /(\d{2})\/(\d{2})/.exec(titre) ?? [];
   if (!jj || !mois) return null;
   const jour = new Date(aujourdhui.getFullYear(), Number(mois) - 1, Number(jj));
@@ -86,5 +87,11 @@ export async function chercherBetclic(progression: (cartes: number) => void): Pr
   }
   document.body.scrollTop = depart.body;
   window.scrollTo(0, depart.fenetre);
-  return lireBetclic(document, new Date());
+  const matchs = lireBetclic(document, new Date());
+  if (matchs.length === 0) {
+    throw new Error(
+      "Betclic n'a chargé aucun Match à venir. Gardez l'onglet Betclic visible pendant la recherche, puis réessayez.",
+    );
+  }
+  return matchs;
 }

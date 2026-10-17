@@ -13,12 +13,15 @@ export function useOngletSuivi(): Browser.tabs.Tab | null {
   useEffect(() => {
     const parametre = new URLSearchParams(location.search).get('tab');
     const dansFenetreSeparee = parametre !== null;
-    let suivi: number | undefined = dansFenetreSeparee ? Number(parametre) : undefined;
+    let suivi: number | undefined = parametre ? Number(parametre) : undefined;
     let maFenetre: number | undefined;
 
     const lire = async () => {
       if (suivi === undefined) {
-        const [actif] = await browser.tabs.query({ active: true, currentWindow: true });
+        // Fenêtre séparée : l'onglet actif d'une fenêtre de navigation, pas le sien.
+        const [actif] = await browser.tabs.query(
+          dansFenetreSeparee ? { active: true, windowType: 'normal' } : { active: true, currentWindow: true },
+        );
         suivi = actif?.id;
       }
       setOnglet(suivi === undefined ? null : await browser.tabs.get(suivi).catch(() => null));

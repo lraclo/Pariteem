@@ -1,5 +1,6 @@
 import { bookmakerPourUrl } from '@/lib/bookmakers';
 import type { NavigateurArc } from '@/lib/messages';
+import type { Browser } from 'wxt/browser';
 
 const LARGEUR = 440;
 const HAUTEUR = 760;
@@ -33,15 +34,16 @@ export default defineBackground(() => {
     majBadge(tabId, (await browser.tabs.get(tabId)).url);
   });
 
-  browser.action.onClicked.addListener(async (onglet) => {
+  async function ouvrirFenetre(onglet: Browser.tabs.Tab | undefined) {
     const existante = await fenetrePariteem.getValue();
     if (existante !== null) {
       const ok = await browser.windows.update(existante, { focused: true }).then(() => true, () => false);
       if (ok) return;
     }
-    const parent = onglet.windowId !== undefined ? await browser.windows.get(onglet.windowId) : undefined;
+    const parent = onglet?.windowId !== undefined ? await browser.windows.get(onglet.windowId) : undefined;
     const fenetre = await browser.windows.create({
-      url: browser.runtime.getURL(`/sidepanel.html?tab=${onglet.id}`),
+      // Sans onglet connu, la fenêtre suit l'onglet actif du navigateur.
+      url: browser.runtime.getURL(`/sidepanel.html?tab=${onglet?.id ?? ''}`),
       type: 'popup',
       width: LARGEUR,
       height: HAUTEUR,
@@ -49,6 +51,33 @@ export default defineBackground(() => {
       top: parent?.top !== undefined ? parent.top + 80 : undefined,
     });
     await fenetrePariteem.setValue(fenetre?.id ?? null);
+  }
+
+  // Ne se déclenche que lorsque le panneau latéral est désactivé (Arc repéré).
+  browser.action.onClicked.addListener(ouvrirFenetre);
+
+  // Repérer Arc n'est pas garanti : le raccourci et le clic droit sur l'icône
+  // ouvrent toujours la fenêtre, et basculent les clics suivants sur la fenêtre.
+  const MENU_FENETRE = 'ouvrir-fenetre';
+  const MENU_PANNEAU = 'revenir-panneau';
+  browser.runtime.onInstalled.addListener(() => {
+    browser.contextMenus.create({ id: MENU_FENETRE, title: 'Ouvrir dans une fenêtre', contexts: ['action'] });
+    browser.contextMenus.create({ id: MENU_PANNEAU, title: 'Revenir au panneau latéral (Chrome)', contexts: ['action'] });
+  });
+  const forcerFenetre = (onglet: Browser.tabs.Tab | undefined) => {
+    sansPanneauLateral.setValue(true);
+    appliquerComportement(true);
+    ouvrirFenetre(onglet);
+  };
+  browser.contextMenus.onClicked.addListener((info, onglet) => {
+    if (info.menuItemId === MENU_FENETRE) forcerFenetre(onglet);
+    if (info.menuItemId === MENU_PANNEAU) {
+      sansPanneauLateral.setValue(false);
+      appliquerComportement(false);
+    }
+  });
+  browser.commands.onCommand.addListener((commande, onglet) => {
+    if (commande === MENU_FENETRE) forcerFenetre(onglet);
   });
 
   browser.windows.onRemoved.addListener(async (id) => {

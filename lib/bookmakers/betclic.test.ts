@@ -40,6 +40,13 @@ describe('lireBetclic', () => {
     expect(debut['Sportivo Luqueño']).toBe(new Date(2026, 9, 19, 0, 20).getTime());
   });
 
+  it('date « Cette nuit » du jour même quand on cherche après minuit', () => {
+    document.body.innerHTML = html;
+    const apresMinuit = new Date(2026, 9, 18, 0, 10);
+    const olimpia = lireBetclic(document, apresMinuit).find((m) => m.equipeDomicile === 'Olimpia Asuncion');
+    expect(olimpia?.debut).toBe(new Date(2026, 9, 18, 0, 20).getTime());
+  });
+
   it("passe à l'année suivante pour une date déjà passée dans l'année", () => {
     const lens = lire().find((m) => m.equipeDomicile === 'Lens');
     expect(lens?.debut).toBe(new Date(2027, 0, 27, 21, 0).getTime());

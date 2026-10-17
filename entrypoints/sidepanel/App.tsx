@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { bookmakerPourUrl, estSurPageFootball } from '@/lib/bookmakers';
 import { classement, meilleurePaire } from '@/lib/domaine/classement';
 import { cotePlancher, type Match, type Paire } from '@/lib/domaine/match';
@@ -6,6 +6,7 @@ import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messag
 import { conditionsFreebet, FENETRES, reglages } from '@/lib/reglages';
 import { Calculateur } from './Calculateur';
 import { formatCote, formatDate } from './format';
+import { useMaintenant } from './useMaintenant';
 import { useOngletSuivi } from './useOngletSuivi';
 import { useStockage } from './useStockage';
 
@@ -13,7 +14,7 @@ type Etat =
   | { type: 'pret' }
   | { type: 'lecture'; cartes: number | null }
   | { type: 'erreur'; message: string }
-  | { type: 'resultats'; matchs: Match[]; lusA: number };
+  | { type: 'resultats'; matchs: Match[] };
 
 export default function App() {
   const onglet = useOngletSuivi();
@@ -22,29 +23,30 @@ export default function App() {
   const [conditions, setConditions] = useStockage(conditionsFreebet);
   const [etat, setEtat] = useState<Etat>({ type: 'pret' });
   const [selection, setSelection] = useState<string[]>([]);
+  const maintenant = useMaintenant();
+  // Numéro de la recherche en cours : une réponse d'une recherche abandonnée est ignorée.
+  const recherche = useRef(0);
 
   // Les résultats d'un Bookmaker n'ont pas de sens sur un autre.
   useEffect(() => {
+    recherche.current++;
     setEtat({ type: 'pret' });
     setSelection([]);
   }, [bookmaker?.id]);
 
   useEffect(() => {
-    const surMessage = (m: Progression) => {
-      if (m?.type === 'progression') setEtat((e) => (e.type === 'lecture' ? { ...e, cartes: m.cartes } : e));
+    const surMessage = (m: Progression, envoyeur: { tab?: { id?: number } }) => {
+      if (m?.type !== 'progression' || envoyeur.tab?.id !== onglet?.id) return;
+      setEtat((e) => (e.type === 'lecture' ? { ...e, cartes: m.cartes } : e));
     };
     browser.runtime.onMessage.addListener(surMessage);
     return () => browser.runtime.onMessage.removeListener(surMessage);
-  }, []);
-
-  const tous = etat.type === 'resultats' ? etat.matchs : [];
-  const maintenant = etat.type === 'resultats' ? etat.lusA : 0;
-  const liste = useMemo(
-    () => (criteres ? classement(tous, { ...criteres, maintenant }) : []),
-    [tous, criteres, maintenant],
-  );
+  }, [onglet?.id]);
 
   if (!criteres || !conditions) return null;
+
+  const tous = etat.type === 'resultats' ? etat.matchs : [];
+  const liste = classement(tous, { ...criteres, maintenant });
 
   if (!bookmaker || !onglet?.id) {
     return (
@@ -59,18 +61,17 @@ export default function App() {
   const doitAllerSurFootball = bookmaker.lectureSurPageFootball && !estSurPageFootball(bookmaker, onglet.url);
 
   async function chercher() {
+    const numero = ++recherche.current;
     setEtat({ type: 'lecture', cartes: null });
     setSelection([]);
+    let suite: Etat;
     try {
       const reponse: ReponseChercher = await browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher);
-      setEtat(
-        reponse.ok
-          ? { type: 'resultats', matchs: reponse.matchs, lusA: Date.now() }
-          : { type: 'erreur', message: reponse.erreur },
-      );
+      suite = reponse.ok ? { type: 'resultats', matchs: reponse.matchs } : { type: 'erreur', message: reponse.erreur };
     } catch {
-      setEtat({ type: 'erreur', message: 'La page ne répond pas. Rechargez-la, puis cliquez de nouveau sur Chercher.' });
+      suite = { type: 'erreur', message: 'La page ne répond pas. Rechargez-la, puis cliquez de nouveau sur Chercher.' };
     }
+    if (numero === recherche.current) setEtat(suite);
   }
 
   function basculer(id: string) {
@@ -82,7 +83,8 @@ export default function App() {
     if (paire) setSelection(paire.map((m) => m.id));
   }
 
-  const [a, b] = selection.map((id) => tous.find((m) => m.id === id));
+  // Seuls les Matchs encore au Classement comptent : un Match commencé en sort.
+  const [a, b] = selection.map((id) => liste.find((m) => m.id === id));
   const paire: Paire | null = a && b ? [a, b] : null;
 
   return (
