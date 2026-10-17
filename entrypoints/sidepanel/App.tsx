@@ -27,8 +27,16 @@ export default function App() {
   // Numéro de la recherche en cours : une réponse d'une recherche abandonnée est ignorée.
   const recherche = useRef(0);
 
+  // Dernier Bookmaker vu : un onglet hors Bookmaker (ou encore sans adresse, comme celui qu'ouvre « Voir »)
+  // ne doit pas effacer les résultats.
+  const dernierBookmaker = useRef(bookmaker?.id);
+
   // Les résultats d'un Bookmaker n'ont pas de sens sur un autre.
   useEffect(() => {
+    if (!bookmaker || bookmaker.id === dernierBookmaker.current) return;
+    const avait = dernierBookmaker.current;
+    dernierBookmaker.current = bookmaker.id;
+    if (avait === undefined) return;
     recherche.current++;
     setEtat({ type: 'pret' });
     setSelection([]);
