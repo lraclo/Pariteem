@@ -37,10 +37,6 @@ describe('phaseDepot', () => {
   it('donne la perte maximale au Pire cas', () => {
     expect(resultat.perteMax).toBeCloseTo(250);
   });
-
-  it('annonce huit Freebets gagnés', () => {
-    expect(resultat.freebetsObtenus).toBe(8);
-  });
 });
 
 describe('phaseFreebet', () => {

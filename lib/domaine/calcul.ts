@@ -22,7 +22,6 @@ export interface ResultatPhase {
   pireCas: number;
   /** Plus grosse perte possible sur la Phase, 0 si aucune Combinaison ne fait perdre. */
   perteMax: number;
-  freebetsObtenus: number;
 }
 
 export function combinaisons([a, b]: Paire): Combinaison[] {
@@ -59,8 +58,6 @@ function resultat(
     misesReelles,
     pireCas: pireCas(paire),
     perteMax: Math.max(0, -pireNet),
-    // Chaque dépôt perdant rapporte un Freebet ; un seul Combiné gagne.
-    freebetsObtenus: types.filter((t) => t === 'depot').length - (types.every((t) => t === 'depot') ? 1 : 0),
   };
 }
 

@@ -48,7 +48,6 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
           <dt>{pireNet < 0 ? 'Perte max' : 'Gain min'}</dt>
           <dd className={pireNet < 0 ? 'negatif' : 'positif'}>{formatEuros(Math.abs(pireNet))}</dd>
         </div>
-        {phase === 'depot' && <div><dt>Freebets obtenus</dt><dd>{resultat.freebetsObtenus}</dd></div>}
       </dl>
       {alertes.map((a) => <p key={a} className="erreur">{a}</p>)}
 
