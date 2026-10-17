@@ -12,8 +12,3 @@ export interface Progression {
   type: 'progression';
   cartes: number;
 }
-
-/** Script de page → service worker : la page tourne dans Arc. */
-export interface NavigateurArc {
-  type: 'navigateur-arc';
-}

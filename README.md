@@ -15,7 +15,7 @@ L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les e
    npm run build
    ```
 3. Dans Chrome, ouvrir `chrome://extensions`, activer **Mode développeur** (en haut à droite), cliquer sur **Charger l'extension non empaquetée** et choisir le dossier `.output/chrome-mv3`.
-4. Épingler l'icône Pariteem dans la barre d'outils (dans Arc : menu **Extensions › Pariteem**).
+4. Épingler l'icône Pariteem dans la barre d'outils.
 
 Après avoir chargé ou rechargé l'extension, rechargez aussi les onglets Winamax et Betclic déjà ouverts.
 
@@ -24,7 +24,7 @@ Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Paritee
 ## Utiliser
 
 1. Ouvrir Winamax ou Betclic : l'icône affiche un ✓.
-2. Cliquer sur l'icône. Dans Chrome, le panneau latéral s'ouvre à droite de la page. Arc n'affiche pas les panneaux latéraux d'extension : utilisez **Option + Maj + P** (ou clic droit sur l'icône › « Ouvrir dans une fenêtre ») pour ouvrir Pariteem dans une fenêtre séparée qui suit l'onglet regardé ; les clics suivants ouvriront aussi la fenêtre. Chrome est recommandé.
+2. Cliquer sur l'icône : le panneau latéral s'ouvre à droite de la page. L'extension ne fonctionne que dans Chrome (Arc, par exemple, n'affiche pas les panneaux latéraux d'extension).
 3. Régler le **Seuil** (Cote plancher minimale), la **Fenêtre** (3 semaines par défaut, 48 h pour un cycle rapide) et le **Tri**.
 4. **Chercher**.
    - Winamax : la page football est lue d'un coup, depuis n'importe quelle page du site.

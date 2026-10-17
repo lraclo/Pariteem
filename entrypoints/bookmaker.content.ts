@@ -2,25 +2,11 @@ import { bookmakerPourUrl } from '@/lib/bookmakers';
 import { chercherBetclic } from '@/lib/bookmakers/betclic';
 import { chercherWinamax } from '@/lib/bookmakers/winamax';
 import type { Match } from '@/lib/domaine/match';
-import type { DemandeChercher, NavigateurArc, Progression, ReponseChercher } from '@/lib/messages';
+import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messages';
 
 export default defineContentScript({
   matches: ['*://*.winamax.fr/*', '*://*.betclic.fr/*'],
   main() {
-    // Arc ajoute ses couleurs (variables --arc-palette-*) aux pages, parfois après le
-    // chargement ; il n'affiche pas les panneaux latéraux d'extension.
-    const estArc = () => {
-      const style = getComputedStyle(document.documentElement);
-      return ['--arc-palette-title', '--arc-palette-background', '--arc-palette-foregroundPrimary'].some(
-        (v) => style.getPropertyValue(v).trim() !== '',
-      );
-    };
-    for (const delai of [0, 1000, 3000]) {
-      setTimeout(() => {
-        if (estArc()) browser.runtime.sendMessage({ type: 'navigateur-arc' } satisfies NavigateurArc).catch(() => {});
-      }, delai);
-    }
-
     let enCours: Promise<Match[]> | null = null;
 
     function chercher(): Promise<Match[]> {
