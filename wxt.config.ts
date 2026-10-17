@@ -7,7 +7,7 @@ export default defineConfig({
     name: 'Pariteem',
     description:
       'Trouve les Matchs de football dont les trois cotes dépassent un seuil, sur Winamax et Betclic.',
-    permissions: ['storage', 'tabs'],
+    permissions: ['sidePanel', 'storage', 'tabs'],
     action: { default_title: 'Pariteem' },
   },
 });

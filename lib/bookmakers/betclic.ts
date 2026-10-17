@@ -58,9 +58,12 @@ export function lireBetclic(racine: ParentNode, maintenant: Date): Match[] {
   return matchs;
 }
 
-/** Corps de page qui défile sur Betclic (ce n'est pas `window`). */
-function conteneurDefilant(): Element {
-  return document.body.scrollHeight > document.body.clientHeight ? document.body : document.documentElement;
+/** Descend tout en bas, quel que soit l'élément qui défile (Betclic fait défiler `body`). */
+function descendre() {
+  const cartes = document.querySelectorAll('a.cardEvent');
+  cartes[cartes.length - 1]?.scrollIntoView({ block: 'end' });
+  document.body.scrollTop = document.body.scrollHeight;
+  window.scrollTo(0, document.documentElement.scrollHeight);
 }
 
 /**
@@ -68,19 +71,20 @@ function conteneurDefilant(): Element {
  * `progression` reçoit le nombre de cartes chargées à chaque étape.
  */
 export async function chercherBetclic(progression: (cartes: number) => void): Promise<Match[]> {
-  const conteneur = conteneurDefilant();
-  const depart = conteneur.scrollTop;
+  const depart = { body: document.body.scrollTop, fenetre: window.scrollY };
   let precedent = -1;
   let immobile = 0;
   const limite = Date.now() + 120_000;
-  while (immobile < 4 && Date.now() < limite) {
-    conteneur.scrollTop = conteneur.scrollHeight;
-    await new Promise((r) => setTimeout(r, 700));
+  // La page charge la suite par paquets ; on s'arrête après ~5 s sans nouvelle carte.
+  while (immobile < 6 && Date.now() < limite) {
+    descendre();
+    await new Promise((r) => setTimeout(r, 800));
     const cartes = document.querySelectorAll('a.cardEvent').length;
     immobile = cartes === precedent ? immobile + 1 : 0;
     precedent = cartes;
     progression(cartes);
   }
-  conteneur.scrollTop = depart;
+  document.body.scrollTop = depart.body;
+  window.scrollTo(0, depart.fenetre);
   return lireBetclic(document, new Date());
 }

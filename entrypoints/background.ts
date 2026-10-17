@@ -1,4 +1,5 @@
 import { bookmakerPourUrl } from '@/lib/bookmakers';
+import type { NavigateurArc } from '@/lib/messages';
 
 const LARGEUR = 440;
 const HAUTEUR = 760;
@@ -6,8 +7,22 @@ const HAUTEUR = 760;
 /** Fenêtre Pariteem ouverte, pour la réutiliser au lieu d'en ouvrir une autre. */
 const fenetrePariteem = storage.defineItem<number | null>('session:fenetre-pariteem', { fallback: null });
 
+/** Vrai dès qu'une page a signalé Arc, qui n'affiche pas les panneaux latéraux d'extension. */
+const sansPanneauLateral = storage.defineItem<boolean>('local:sans-panneau-lateral', { fallback: false });
+
 export default defineBackground(() => {
   browser.action.setBadgeBackgroundColor({ color: '#1a7f37' });
+
+  // Panneau latéral par défaut (Chrome) ; sinon le clic arrive dans onClicked et ouvre une fenêtre.
+  const appliquerComportement = (sansPanneau: boolean) =>
+    browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: !sansPanneau }).catch(() => {});
+  sansPanneauLateral.getValue().then(appliquerComportement);
+
+  browser.runtime.onMessage.addListener((message: NavigateurArc) => {
+    if (message?.type !== 'navigateur-arc') return;
+    sansPanneauLateral.setValue(true);
+    appliquerComportement(true);
+  });
 
   function majBadge(tabId: number, url: string | undefined) {
     browser.action.setBadgeText({ tabId, text: bookmakerPourUrl(url) ? '✓' : '' });
@@ -18,8 +33,6 @@ export default defineBackground(() => {
     majBadge(tabId, (await browser.tabs.get(tabId)).url);
   });
 
-  // Une fenêtre plutôt qu'un panneau latéral : Arc et d'autres navigateurs
-  // basés sur Chromium n'affichent pas les panneaux latéraux d'extension.
   browser.action.onClicked.addListener(async (onglet) => {
     const existante = await fenetrePariteem.getValue();
     if (existante !== null) {
@@ -28,7 +41,7 @@ export default defineBackground(() => {
     }
     const parent = onglet.windowId !== undefined ? await browser.windows.get(onglet.windowId) : undefined;
     const fenetre = await browser.windows.create({
-      url: browser.runtime.getURL(`/panneau.html?tab=${onglet.id}`),
+      url: browser.runtime.getURL(`/sidepanel.html?tab=${onglet.id}`),
       type: 'popup',
       width: LARGEUR,
       height: HAUTEUR,
