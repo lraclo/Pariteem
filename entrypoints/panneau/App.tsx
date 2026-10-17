@@ -6,7 +6,7 @@ import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messag
 import { conditionsFreebet, FENETRES, reglages } from '@/lib/reglages';
 import { Calculateur } from './Calculateur';
 import { formatCote, formatDate } from './format';
-import { useOngletActif } from './useOngletActif';
+import { useOngletSuivi } from './useOngletSuivi';
 import { useStockage } from './useStockage';
 
 type Etat =
@@ -16,7 +16,7 @@ type Etat =
   | { type: 'resultats'; matchs: Match[]; lusA: number };
 
 export default function App() {
-  const onglet = useOngletActif();
+  const onglet = useOngletSuivi();
   const bookmaker = bookmakerPourUrl(onglet?.url);
   const [criteres, setCriteres] = useStockage(reglages);
   const [conditions, setConditions] = useStockage(conditionsFreebet);
@@ -50,7 +50,7 @@ export default function App() {
     return (
       <main>
         <h1>Pariteem</h1>
-        <p className="aide">Ouvrez Winamax ou Betclic dans cet onglet pour chercher des Matchs.</p>
+        <p className="aide">Ouvrez Winamax ou Betclic dans le navigateur pour chercher des Matchs.</p>
       </main>
     );
   }

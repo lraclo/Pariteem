@@ -15,18 +15,20 @@ L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les e
    npm run build
    ```
 3. Dans Chrome, ouvrir `chrome://extensions`, activer **Mode développeur** (en haut à droite), cliquer sur **Charger l'extension non empaquetée** et choisir le dossier `.output/chrome-mv3`.
-4. Épingler l'icône Pariteem dans la barre d'outils.
+4. Épingler l'icône Pariteem dans la barre d'outils (dans Arc : menu **Extensions › Pariteem**).
+
+Après avoir chargé ou rechargé l'extension, rechargez aussi les onglets Winamax et Betclic déjà ouverts.
 
 Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Pariteem dans `chrome://extensions`.
 
 ## Utiliser
 
 1. Ouvrir Winamax ou Betclic : l'icône affiche un ✓.
-2. Cliquer sur l'icône pour ouvrir le panneau latéral.
+2. Cliquer sur l'icône : une petite fenêtre Pariteem s'ouvre à droite du navigateur. Elle reste ouverte pendant que vous naviguez et suit l'onglet que vous regardez (une fenêtre plutôt qu'un panneau latéral, car Arc n'affiche pas les panneaux latéraux d'extension).
 3. Régler le **Seuil** (Cote plancher minimale), la **Fenêtre** (3 semaines par défaut, 48 h pour un cycle rapide) et le **Tri**.
 4. **Chercher**.
    - Winamax : la page football est lue d'un coup, depuis n'importe quelle page du site.
-   - Betclic : il faut être sur la page « Tout le football » (le panneau propose d'y aller), puis la page défile toute seule jusqu’en bas (jusqu’à une minute).
+   - Betclic : il faut être sur la page « Tout le football » (la fenêtre Pariteem propose d'y aller), puis la page défile toute seule jusqu’en bas (jusqu’à une minute).
 5. Le Classement affiche les dix meilleures Cotes planchers. Cocher deux Matchs, ou cliquer sur **Meilleure Paire**, pour voir les neuf Combinaisons en **Phase dépôt** ou **Phase freebet**.
 6. Les conditions de l'offre de bienvenue (montant, cote minimale, remboursement en cash ou en Freebet) se règlent par Bookmaker sous le tableau. Vérifiez-les sur le site du Bookmaker : elles changent souvent.
 
@@ -42,4 +44,4 @@ npm run compile  # vérification TypeScript
 
 - `lib/domaine/` : Classement, Pire cas, calculs des deux Phases. Aucune dépendance au navigateur.
 - `lib/bookmakers/` : un lecteur par Bookmaker, testé sur des extraits de pages réelles dans `fixtures/`. Si un site change sa structure, c'est ici que ça casse ([ADR 0001](docs/adr/0001-lecture-des-cotes-par-bookmaker.md)).
-- `entrypoints/` : script de page, service worker (badge, ouverture du panneau) et panneau latéral React.
+- `entrypoints/` : script de page, service worker (badge, ouverture de la fenêtre) et fenêtre Pariteem en React (`entrypoints/panneau/`).
