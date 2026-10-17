@@ -1,0 +1,68 @@
+:root {
+  color-scheme: light dark;
+  --fond: #ffffff;
+  --texte: #1f2328;
+  --discret: #59636e;
+  --bord: #d1d9e0;
+  --accent: #0969da;
+  --choisi: #ddf4ff;
+  --positif: #1a7f37;
+  --negatif: #cf222e;
+  font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #0d1117;
+    --texte: #e6edf3;
+    --discret: #9198a1;
+    --bord: #3d444d;
+    --accent: #4493f8;
+    --choisi: #12263f;
+    --positif: #3fb950;
+    --negatif: #f85149;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fond); color: var(--texte); }
+main { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+h1 { font-size: 18px; margin: 0; display: flex; align-items: center; gap: 8px; }
+h2 { font-size: 15px; margin: 0; }
+.site { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 999px; background: var(--choisi); color: var(--accent); }
+.aide { color: var(--discret); margin: 0; }
+.erreur { color: var(--negatif); margin: 0; }
+button { font: inherit; padding: 6px 10px; border: 1px solid var(--bord); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+button.principal { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; padding: 8px; }
+button:disabled { opacity: 0.6; cursor: default; }
+input, select { font: inherit; color: inherit; background: transparent; border: 1px solid var(--bord); border-radius: 6px; padding: 4px 6px; width: 100%; }
+.reglages { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.reglages label, .conditions label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--discret); }
+.classement { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.classement li { border: 1px solid var(--bord); border-radius: 8px; padding: 8px; display: flex; gap: 6px; align-items: center; }
+.classement li.choisi { background: var(--choisi); border-color: var(--accent); }
+.classement li > label { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0; cursor: pointer; }
+.classement input[type='checkbox'] { width: auto; }
+.match { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.match strong, .match small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.match small { color: var(--discret); }
+.cotes { display: flex; gap: 6px; font-variant-numeric: tabular-nums; }
+.cotes .plancher { font-weight: 700; color: var(--accent); }
+.classement a { font-size: 12px; color: var(--accent); }
+.calculateur { border-top: 1px solid var(--bord); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.onglets { display: flex; gap: 6px; }
+.onglets button.actif { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.resume { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; margin: 0; }
+.resume div { border: 1px solid var(--bord); border-radius: 6px; padding: 6px; }
+.resume dt { font-size: 11px; color: var(--discret); }
+.resume dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 4px; border-bottom: 1px solid var(--bord); }
+th:first-child, td:first-child { text-align: left; }
+.positif { color: var(--positif); }
+.negatif { color: var(--negatif); }
+.depot { display: inline-flex; gap: 4px; align-items: center; justify-content: flex-end; }
+.depot input { width: auto; }
+.conditions { display: flex; flex-direction: column; gap: 6px; }
+.conditions summary { cursor: pointer; color: var(--discret); }
+.conditions label { margin-top: 6px; }
+.conditions label.case { flex-direction: row; align-items: center; gap: 6px; }
+.conditions label.case input { width: auto; }
