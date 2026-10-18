@@ -20,3 +20,13 @@ export type Paire = readonly [Match, Match];
 export function cotePlancher(match: Match): number {
   return Math.min(match.cotes['1'], match.cotes.N, match.cotes['2']);
 }
+
+/** Probabilité de chaque Issue déduite des Cotes, marge du Bookmaker retirée. */
+export function probabilites(match: Match): Record<Issue, number> {
+  const total = ISSUES.reduce((s, i) => s + 1 / match.cotes[i], 0);
+  return {
+    '1': 1 / match.cotes['1'] / total,
+    N: 1 / match.cotes.N / total,
+    '2': 1 / match.cotes['2'] / total,
+  };
+}

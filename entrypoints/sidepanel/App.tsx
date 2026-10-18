@@ -6,6 +6,7 @@ import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messag
 import { conditionsFreebet, FENETRES, reglages } from '@/lib/reglages';
 import { Calculateur } from './Calculateur';
 import { formatCote, formatDate } from './format';
+import { Segmente } from './Segmente';
 import { useMaintenant } from './useMaintenant';
 import { useOngletSuivi } from './useOngletSuivi';
 import { useStockage } from './useStockage';
@@ -59,8 +60,10 @@ export default function App() {
   if (!bookmaker || !onglet?.id) {
     return (
       <main>
-        <h1>Pariteem</h1>
-        <p className="aide">Ouvrez Winamax ou Betclic dans le navigateur pour chercher des Matchs.</p>
+        <Entete />
+        <section>
+          <p className="aide">Ouvrez Winamax ou Betclic dans le navigateur pour chercher des Matchs.</p>
+        </section>
       </main>
     );
   }
@@ -86,6 +89,10 @@ export default function App() {
     setSelection((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id].slice(-2)));
   }
 
+  function changerSeuil(seuil: number) {
+    if (seuil >= 1) setCriteres({ ...criteres!, seuil: Math.round(seuil * 100) / 100 });
+  }
+
   function choisirMeilleurePaire() {
     const paire = meilleurePaire(tous, { ...criteres!, maintenant });
     if (paire) setSelection(paire.map((m) => m.id));
@@ -97,89 +104,117 @@ export default function App() {
 
   return (
     <main>
-      <h1>
-        Pariteem <span className="site">{bookmaker.nom}</span>
-      </h1>
+      <Entete site={bookmaker.nom} />
 
-      <section className="reglages">
-        <label>
-          Seuil
-          <input
-            type="number"
-            min={1}
-            step={0.05}
-            value={criteres.seuil}
-            onChange={(e) => e.target.valueAsNumber > 0 && setCriteres({ ...criteres, seuil: e.target.valueAsNumber })}
+      <section className="reglages" aria-label="Critères de recherche">
+        <div className="ligne">
+          <label htmlFor="seuil">Seuil</label>
+          <div className="pas">
+            <button type="button" aria-label="Baisser le Seuil" onClick={() => changerSeuil(criteres.seuil - 0.05)}>−</button>
+            <input
+              id="seuil"
+              type="number"
+              min={1}
+              step={0.05}
+              value={criteres.seuil}
+              onChange={(e) => e.target.valueAsNumber > 0 && setCriteres({ ...criteres, seuil: e.target.valueAsNumber })}
+            />
+            <button type="button" aria-label="Monter le Seuil" onClick={() => changerSeuil(criteres.seuil + 0.05)}>+</button>
+          </div>
+        </div>
+        <div className="ligne">
+          <span>Fenêtre</span>
+          <Segmente
+            libelle="Fenêtre"
+            options={FENETRES.map((f) => ({ valeur: f.ms, texte: f.court, titre: f.libelle }))}
+            valeur={criteres.fenetreMs}
+            onChange={(fenetreMs) => setCriteres({ ...criteres, fenetreMs })}
           />
-        </label>
-        <label>
-          Fenêtre
-          <select
-            value={criteres.fenetreMs}
-            onChange={(e) => setCriteres({ ...criteres, fenetreMs: Number(e.target.value) })}
-          >
-            {FENETRES.map((f) => (
-              <option key={f.ms} value={f.ms}>{f.libelle}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Tri
-          <select
-            value={criteres.tri}
-            onChange={(e) => setCriteres({ ...criteres, tri: e.target.value as typeof criteres.tri })}
-          >
-            <option value="cote-plancher">Cote plancher</option>
-            <option value="chronologique">Chronologique</option>
-          </select>
-        </label>
+        </div>
+        <div className="ligne">
+          <span>Tri</span>
+          <Segmente<typeof criteres.tri>
+            libelle="Tri"
+            options={[
+              { valeur: 'cote-plancher', texte: 'Cote plancher' },
+              { valeur: 'chronologique', texte: 'Chronologique' },
+            ]}
+            valeur={criteres.tri}
+            onChange={(tri) => setCriteres({ ...criteres, tri })}
+          />
+        </div>
+
+        {doitAllerSurFootball ? (
+          <button className="principal" onClick={() => browser.tabs.update(tabId, { url: bookmaker.urlFootball })}>
+            Aller sur la page Football
+          </button>
+        ) : (
+          <button className="principal" onClick={chercher} disabled={etat.type === 'lecture'}>
+            {etat.type === 'lecture' ? 'Lecture…' : 'Chercher'}
+          </button>
+        )}
+
+        {etat.type === 'lecture' && (
+          <p className="aide">{etat.cartes === null ? 'Lecture des Matchs…' : `${etat.cartes} Matchs chargés…`}</p>
+        )}
+        {etat.type === 'erreur' && <p className="erreur">{etat.message}</p>}
       </section>
-
-      {doitAllerSurFootball ? (
-        <button className="principal" onClick={() => browser.tabs.update(tabId, { url: bookmaker.urlFootball })}>
-          Aller sur la page Football
-        </button>
-      ) : (
-        <button className="principal" onClick={chercher} disabled={etat.type === 'lecture'}>
-          {etat.type === 'lecture' ? 'Lecture…' : 'Chercher'}
-        </button>
-      )}
-
-      {etat.type === 'lecture' && (
-        <p className="aide">{etat.cartes === null ? 'Lecture des Matchs…' : `${etat.cartes} Matchs chargés…`}</p>
-      )}
-      {etat.type === 'erreur' && <p className="erreur">{etat.message}</p>}
 
       {etat.type === 'resultats' && (
         <>
-          <p className="aide">
-            {tous.length} Matchs lus, {liste.length} retenus (Cote plancher ≥ {formatCote(criteres.seuil)}).
-            {liste.length > 0 && ' Cochez deux Matchs pour former une Paire.'}
-          </p>
-          {liste.length >= 2 && (
-            <button onClick={choisirMeilleurePaire}>Meilleure Paire</button>
-          )}
-          <ol className="classement">
-            {liste.map((m) => (
-              <li key={m.id} className={selection.includes(m.id) ? 'choisi' : ''}>
-                <label>
-                  <input type="checkbox" checked={selection.includes(m.id)} onChange={() => basculer(m.id)} />
-                  <span className="match">
-                    <strong>{m.equipeDomicile} – {m.equipeExterieur}</strong>
-                    <small>{m.competition} · {formatDate(m.debut)}</small>
-                  </span>
-                  <span className="cotes">
-                    {(['1', 'N', '2'] as const).map((i) => (
-                      <span key={i} className={m.cotes[i] === cotePlancher(m) ? 'plancher' : ''}>
-                        {formatCote(m.cotes[i])}
-                      </span>
-                    ))}
-                  </span>
-                </label>
-                {m.url && <a href={m.url} target="_blank" rel="noreferrer">Voir</a>}
-              </li>
-            ))}
-          </ol>
+          <section className="classement" aria-label="Classement">
+            <div className="titre-section">
+              <div>
+                <h2>Classement</h2>
+                <span className="aide">{liste.length} sur {tous.length} Matchs lus</span>
+              </div>
+              {liste.length >= 2 && (
+                <button className="secondaire" onClick={choisirMeilleurePaire}>Meilleure Paire</button>
+              )}
+            </div>
+
+            {liste.length === 0 ? (
+              <p className="aide vide">Aucun Match avec une Cote plancher ≥ {formatCote(criteres.seuil)} dans la Fenêtre.</p>
+            ) : (
+              <>
+                <div className="entete-liste" aria-hidden="true">
+                  <span />
+                  <span>Match</span>
+                  <span className="cotes"><span>1</span><span>N</span><span>2</span></span>
+                </div>
+                <ol>
+                  {liste.map((m, index) => {
+                    const id = `match-${index}`;
+                    const choisi = selection.includes(m.id);
+                    return (
+                      <li key={m.id} className={choisi ? 'choisi' : ''}>
+                        <input id={id} type="checkbox" checked={choisi} onChange={() => basculer(m.id)} />
+                        <div className="match">
+                          <label htmlFor={id}>
+                            <strong>{m.equipeDomicile}</strong>
+                            <strong>{m.equipeExterieur}</strong>
+                          </label>
+                          <small>
+                            <span>{m.competition} · {formatDate(m.debut)}</span>
+                            {m.url && <a href={m.url} target="_blank" rel="noreferrer">Voir</a>}
+                          </small>
+                        </div>
+                        <label htmlFor={id} className="cotes">
+                          {(['1', 'N', '2'] as const).map((i) => (
+                            <span key={i}>
+                              <span className={m.cotes[i] === cotePlancher(m) ? 'plancher' : ''}>{formatCote(m.cotes[i])}</span>
+                            </span>
+                          ))}
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ol>
+                {!paire && <p className="aide pied">Cochez deux Matchs pour former une Paire.</p>}
+              </>
+            )}
+          </section>
+
           {paire && (
             <Calculateur
               paire={paire}
@@ -190,5 +225,14 @@ export default function App() {
         </>
       )}
     </main>
+  );
+}
+
+function Entete({ site }: { site?: string }) {
+  return (
+    <header className="entete">
+      <span className="marque"><span className="pastille" aria-hidden="true" />Pariteem</span>
+      {site && <span className="aide">{site}</span>}
+    </header>
   );
 }

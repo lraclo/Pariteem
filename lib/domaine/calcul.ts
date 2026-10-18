@@ -1,4 +1,4 @@
-import { cotePlancher, ISSUES, type Issue, type Paire } from './match';
+import { cotePlancher, ISSUES, probabilites, type Issue, type Paire } from './match';
 
 export interface Combinaison {
   issues: [Issue, Issue];
@@ -22,6 +22,8 @@ export interface ResultatPhase {
   pireCas: number;
   /** Plus faible résultat net : une perte s'il est négatif, sinon le gain garanti. */
   pireNet: number;
+  /** Net moyen attendu, chaque Combinaison pondérée par la probabilité tirée des Cotes. */
+  esperance: number;
 }
 
 export function combinaisons([a, b]: Paire): Combinaison[] {
@@ -53,11 +55,16 @@ function resultat(
         : mise * (combinaison.coteCombinee - 1);
     return { combinaison, mise: type, gain, net: gain - misesReelles };
   });
+  const [pa, pb] = [probabilites(paire[0]), probabilites(paire[1])];
   return {
     lignes,
     misesReelles,
     pireCas: pireCas(paire),
     pireNet: Math.min(...lignes.map((l) => l.net)),
+    esperance: lignes.reduce(
+      (s, l) => s + l.net * pa[l.combinaison.issues[0]] * pb[l.combinaison.issues[1]],
+      0,
+    ),
   };
 }
 

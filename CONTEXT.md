@@ -66,6 +66,10 @@ _Avoid_: cote totale
 La plus faible Cote combinée des neuf Combinaisons d'une Paire, égale au produit des deux Cotes planchers.
 _Avoid_: cote garantie, minimum
 
+**Espérance**:
+Le résultat net moyen attendu d'une Phase : le net de chaque Combinaison pondéré par sa probabilité, déduite des Cotes une fois la marge du Bookmaker retirée.
+_Avoid_: moyenne, gain moyen
+
 **Meilleure Paire**:
 Les deux premiers Matchs du Classement, c'est-à-dire la Paire dont le Pire cas est le plus élevé.
 _Avoid_: meilleure combinaison
