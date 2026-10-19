@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { bookmakerPourUrl, estSurPageFootball } from '@/lib/bookmakers';
+import { BOOKMAKERS, bookmakerPourUrl, estSurPageFootball } from '@/lib/bookmakers';
 import { classement, meilleurePaire } from '@/lib/domaine/classement';
 import { cotePlancher, type Match, type Paire } from '@/lib/domaine/match';
 import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messages';
-import { conditionsFreebet, FENETRES, reglages } from '@/lib/reglages';
+import { CONDITIONS_PAR_DEFAUT, conditionsFreebet, FENETRES, reglages } from '@/lib/reglages';
 import { Calculateur } from './Calculateur';
 import { formatCote, formatDate } from './format';
 import { Segmente } from './Segmente';
@@ -13,7 +13,7 @@ import { useStockage } from './useStockage';
 
 type Etat =
   | { type: 'pret' }
-  | { type: 'lecture'; cartes: number | null }
+  | { type: 'lecture'; matchs: number | null }
   | { type: 'erreur'; message: string }
   | { type: 'resultats'; matchs: Match[] };
 
@@ -46,7 +46,7 @@ export default function App() {
   useEffect(() => {
     const surMessage = (m: Progression, envoyeur: { tab?: { id?: number } }) => {
       if (m?.type !== 'progression' || envoyeur.tab?.id !== onglet?.id) return;
-      setEtat((e) => (e.type === 'lecture' ? { ...e, cartes: m.cartes } : e));
+      setEtat((e) => (e.type === 'lecture' ? { ...e, matchs: m.matchs } : e));
     };
     browser.runtime.onMessage.addListener(surMessage);
     return () => browser.runtime.onMessage.removeListener(surMessage);
@@ -62,7 +62,8 @@ export default function App() {
       <main>
         <Entete />
         <section>
-          <p className="aide">Ouvrez Winamax ou Betclic dans le navigateur pour chercher des Matchs.</p>
+          <p className="aide">Ouvrez le site d'un Bookmaker pris en charge pour chercher des Matchs :</p>
+          <p className="aide">{BOOKMAKERS.map((b) => b.nom).join(', ')}.</p>
         </section>
       </main>
     );
@@ -73,7 +74,7 @@ export default function App() {
 
   async function chercher() {
     const numero = ++recherche.current;
-    setEtat({ type: 'lecture', cartes: null });
+    setEtat({ type: 'lecture', matchs: null });
     setSelection([]);
     let suite: Etat;
     try {
@@ -155,7 +156,7 @@ export default function App() {
         )}
 
         {etat.type === 'lecture' && (
-          <p className="aide">{etat.cartes === null ? 'Lecture des Matchs…' : `${etat.cartes} Matchs chargés…`}</p>
+          <p className="aide">{etat.matchs === null ? 'Lecture des Matchs…' : `${etat.matchs} Matchs chargés…`}</p>
         )}
         {etat.type === 'erreur' && <p className="erreur">{etat.message}</p>}
       </section>
@@ -218,7 +219,7 @@ export default function App() {
           {paire && (
             <Calculateur
               paire={paire}
-              conditions={conditions[bookmaker.id]}
+              conditions={conditions[bookmaker.id] ?? CONDITIONS_PAR_DEFAUT}
               setConditions={(c) => setConditions({ ...conditions, [bookmaker.id]: c })}
             />
           )}

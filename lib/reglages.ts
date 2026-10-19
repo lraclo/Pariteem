@@ -24,7 +24,7 @@ export interface ConditionsFreebet {
   coteMinCombine: number | null;
 }
 
-const CONDITIONS_PAR_DEFAUT: ConditionsFreebet = {
+export const CONDITIONS_PAR_DEFAUT: ConditionsFreebet = {
   montant: 100,
   miseRendue: false,
   coteMinSelection: null,
@@ -35,7 +35,8 @@ export const reglages = storage.defineItem<Reglages>('local:reglages', {
   fallback: { seuil: 2.5, fenetreMs: FENETRES[3].ms, tri: 'cote-plancher' },
 });
 
-export const conditionsFreebet = storage.defineItem<Record<IdBookmaker, ConditionsFreebet>>(
+/** Par Bookmaker ; un Bookmaker absent (ajouté depuis le dernier réglage) prend CONDITIONS_PAR_DEFAUT. */
+export const conditionsFreebet = storage.defineItem<Partial<Record<IdBookmaker, ConditionsFreebet>>>(
   'local:conditions-freebet',
-  { fallback: { winamax: CONDITIONS_PAR_DEFAUT, betclic: CONDITIONS_PAR_DEFAUT } },
+  { fallback: {} },
 );
