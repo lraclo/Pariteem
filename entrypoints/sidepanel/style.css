@@ -39,6 +39,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 button:disabled { opacity: 0.6; cursor: default; }
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.principal { height: 44px; margin-top: 4px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; }
+button.principal.arreter { border: 1px solid var(--bord); background: var(--fond); color: var(--negatif); }
 button.secondaire { flex: none; white-space: nowrap; height: 32px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--accent-ligne); background: var(--fond); color: var(--accent-texte); font-size: 12.5px; font-weight: 600; }
 input { font: inherit; color: inherit; }
 input[type='checkbox'] { accent-color: var(--accent); width: 17px; height: 17px; margin: 0; cursor: pointer; }
@@ -100,6 +101,7 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .comparaison .bookmaker strong { font-weight: 650; }
 .comparaison .match-court { font-size: 12.5px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small { margin-top: 2px; font-size: 12px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comparaison .bookmaker small.echec { color: var(--negatif); white-space: normal; }
 .comparaison .alerte { color: var(--attention); font-weight: 400; cursor: help; }
 .comparaison .pire-cas, .comparaison .esperance { text-align: right; white-space: nowrap; }
 .comparaison .pire-cas { font-weight: 650; }

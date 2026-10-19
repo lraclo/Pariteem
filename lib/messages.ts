@@ -13,3 +13,18 @@ export interface Progression {
   /** Matchs lus jusqu'ici. */
   matchs: number;
 }
+
+/** Service worker → script de page : vrai dès que le script de page est chargé et prêt à lire. */
+export interface DemandePing {
+  type: 'ping';
+}
+
+/** Panneau → service worker : lire tous les Bookmakers dans une fenêtre réduite (ADR 0005). */
+export interface DemandeToutLire {
+  type: 'tout-lire';
+}
+
+/** Panneau → service worker : fermer la fenêtre réduite et garder les Lectures déjà faites. */
+export interface DemandeArreter {
+  type: 'arreter';
+}

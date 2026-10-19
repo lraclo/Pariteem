@@ -1,10 +1,13 @@
 import type { IdBookmaker } from '@/lib/bookmakers';
 import { comparer, type LigneComparaison } from '@/lib/domaine/comparaison';
 import { selections, type Lectures } from '@/lib/lectures';
+import type { DemandeArreter, DemandeToutLire } from '@/lib/messages';
 import { CONDITIONS_PAR_DEFAUT, type ConditionsFreebet, type Reglages } from '@/lib/reglages';
+import { toutLire, type ToutLire } from '@/lib/tout-lire';
 import { AgeLecture } from './AgeLecture';
 import { ChampsCriteres } from './ChampsCriteres';
 import { formatCote, formatNet, texteEcart } from './format';
+import { useStockage } from './useStockage';
 
 interface Props {
   criteres: Reglages;
@@ -20,6 +23,13 @@ interface Props {
 export function Comparer({ criteres, setCriteres, conditions, lectures, maintenant, surOuverture }: Props) {
   const lignes = comparer(lectures, { ...criteres, maintenant }, conditions);
   const lus = lignes.filter((l) => l.type !== 'jamais-lu').length;
+  const [course] = useStockage(toutLire);
+  const sites = Object.values(course?.sites ?? {});
+  const termines = sites.filter((e) => e.etat !== 'attente' && e.etat !== 'lecture').length;
+
+  function envoyer(message: DemandeToutLire | DemandeArreter) {
+    browser.runtime.sendMessage(message).catch(() => {});
+  }
 
   /** Ouvre le site du Bookmaker et y coche la Paire, pour afficher tout de suite le Calculateur. */
   async function ouvrir(l: LigneComparaison) {
@@ -34,6 +44,15 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
     <>
       <section className="reglages" aria-label="Critères de comparaison">
         <ChampsCriteres criteres={criteres} setCriteres={setCriteres} avecTri={false} />
+
+        {course?.enCours ? (
+          <button className="principal arreter" onClick={() => envoyer({ type: 'arreter' })}>Arrêter</button>
+        ) : (
+          <button className="principal" onClick={() => envoyer({ type: 'tout-lire' })}>Tout lire</button>
+        )}
+        {course?.enCours && <p className="aide">Lecture en cours : {termines} sur {sites.length || lignes.length} Bookmakers terminés.</p>}
+        {!course?.enCours && course?.erreur && <p className="erreur">{course.erreur}</p>}
+        <p className="aide">Mieux vaut le lancer sans être connecté à un compte de Bookmaker dans ce navigateur.</p>
       </section>
 
       <section className="comparaison" aria-label="Comparaison">
@@ -70,7 +89,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
                   ) : l.type === 'sans-paire' ? (
                     <span className="match-court">Aucune Paire au Seuil {formatCote(criteres.seuil)}</span>
                   ) : null}
-                  <small>{l.type === 'jamais-lu' ? 'Pas encore lu' : <AgeLecture lueA={l.lueA} maintenant={maintenant} />}</small>
+                  <Statut ligne={l} course={course} maintenant={maintenant} />
                 </span>
                 <span className="pire-cas">{l.type === 'paire' ? formatCote(l.pireCas) : '–'}</span>
                 <span className={l.type === 'paire' ? (l.esperance < 0 ? 'esperance negatif' : 'esperance positif') : 'esperance'}>
@@ -84,4 +103,30 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
       </section>
     </>
   );
+}
+
+/**
+ * Où en est la lecture du Bookmaker : l'avancement de « Tout lire » pendant qu'il tourne, puis ses échecs
+ * (jusqu'à une Lecture plus récente), et sinon l'âge de la dernière Lecture.
+ */
+function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course: ToutLire | null; maintenant: number }) {
+  const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
+  const etat = course?.sites[ligne.bookmaker.id];
+  const aJour = lueA !== null && course !== null && lueA >= course.debut;
+  const affiche = course?.enCours ? etat : !aJour && (etat?.etat === 'erreur' || etat?.etat === 'a-la-main') ? etat : undefined;
+  switch (affiche?.etat) {
+    case 'attente':
+      return <small>En attente</small>;
+    case 'lecture':
+      return <small>{affiche.matchs === null ? 'Lecture…' : `Lecture… ${affiche.matchs} Matchs`}</small>;
+    case 'lu':
+      return <small className="positif">✓ {affiche.matchs} Matchs</small>;
+    case 'erreur':
+      return <small className="echec" title={affiche.message}>✗ {affiche.message}</small>;
+    case 'lu-recemment':
+      return <small>Lu récemment</small>;
+    case 'a-la-main':
+      return <small className="a-relancer">À lire à la main : cliquez pour ouvrir {ligne.bookmaker.nom}</small>;
+  }
+  return <small>{lueA === null ? 'Pas encore lu' : <AgeLecture lueA={lueA} maintenant={maintenant} />}</small>;
 }

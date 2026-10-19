@@ -47,6 +47,7 @@ Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Paritee
 5. Le Classement affiche les dix meilleures Cotes planchers. Cocher deux Matchs, ou cliquer sur **Meilleure Paire**, pour voir les neuf Combinaisons en **Phase dépôt** ou **Phase freebet**.
 6. Les conditions de l'offre de bienvenue (montant, cote minimale, remboursement en cash ou en Freebet) se règlent par Bookmaker sous le tableau. Vérifiez-les sur le site du Bookmaker : elles changent souvent.
 7. **Comparer** (onglet en haut du panneau, accessible depuis n'importe quel site) : une ligne par Bookmaker déjà lu, avec sa Meilleure Paire, son Pire cas et l'Espérance de sa Phase dépôt, classés par Pire cas. Le Seuil et la Fenêtre sont les mêmes que dans Chercher. Un ⚠ signale une Paire sous les cotes minimales de l'offre de bienvenue. Cliquer sur une ligne ouvre le site du Bookmaker avec la Paire déjà cochée.
+8. **Tout lire** (en haut de Comparer) lit tous les Bookmakers d'un clic, dans une fenêtre Chrome réduite qui se ferme à la fin (deux minutes environ, trois sites à la fois, Genybet en dernier). Chaque ligne montre son avancement : « En attente », « Lecture… », ✓ ou ✗. **Arrêter** ferme la fenêtre et garde les Lectures déjà faites. Fermer le panneau n'arrête pas la lecture. Genybet n'est pas relu s'il l'a été il y a moins de 10 minutes. Mieux vaut lancer « Tout lire » sans être connecté à un compte de Bookmaker dans ce navigateur : quatorze sites lus d'affilée ressemblent davantage à un robot ([ADR 0005](docs/adr/0005-tout-lire-dans-une-fenetre-reduite.md)).
 
 Chaque Lecture (les Matchs lus et leur heure) est mémorisée par Bookmaker, même après un redémarrage de Chrome : « Lu il y a 12 min » passe en orange après 30 minutes et en rouge après 3 heures. Les Cotes bougent : relancez une recherche avant de parier.
 
@@ -60,5 +61,6 @@ npm run compile  # vérification TypeScript
 
 - `lib/domaine/` : Classement, Pire cas, calculs des deux Phases, Comparaison des Bookmakers. Aucune dépendance au navigateur.
 - `lib/lectures.ts` : la dernière Lecture de chaque Bookmaker, dans `storage.local`.
+- `lib/tout-lire.ts` : l'ordre de lecture de « Tout lire », testé sans navigateur ; la fenêtre réduite et les onglets sont gérés par le service worker (`entrypoints/background.ts`).
 - `lib/bookmakers/` : un lecteur par plateforme de paris (plusieurs Bookmakers en partagent une), testé sur des extraits de réponses réelles dans `fixtures/`. Si un site change son API, c'est ici que ça casse ([ADR 0001](docs/adr/0001-lecture-des-cotes-par-bookmaker.md), [ADR 0004](docs/adr/0004-lecture-par-plateforme-via-les-api-des-sites.md)). `index.ts` liste les Bookmakers, `lecteurs.ts` associe chacun à sa lecture.
-- `entrypoints/` : script de page, service worker (badge, panneau latéral ou fenêtre selon le navigateur) et panneau en React (`entrypoints/sidepanel/`).
+- `entrypoints/` : script de page, service worker (badge, panneau latéral, « Tout lire ») et panneau en React (`entrypoints/sidepanel/`, une vue par onglet : `Chercher.tsx` et `Comparer.tsx`).
