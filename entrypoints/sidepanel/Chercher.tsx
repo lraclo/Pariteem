@@ -173,7 +173,7 @@ export function Chercher({ onglet, criteres, setCriteres, conditions, setConditi
                             <strong>{m.equipeExterieur}</strong>
                           </label>
                           <small>
-                            <span>{m.competition} · {formatDate(m.debut)}</span>
+                            <span title={m.competition}>{formatDate(m.debut)}</span>
                             {m.url && <a href={m.url} target="_blank" rel="noreferrer">Voir</a>}
                           </small>
                         </div>

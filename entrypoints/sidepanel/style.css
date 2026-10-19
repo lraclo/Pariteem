@@ -99,13 +99,14 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .comparaison li > button { width: 100%; align-items: start; padding-block: 11px; text-align: left; }
 .comparaison li > button:hover { background: var(--case); }
 .comparaison .bookmaker { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.comparaison .bookmaker strong { font-weight: 650; }
-.comparaison .match-court { font-size: 12.5px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.comparaison .bookmaker small { margin-top: 2px; font-size: 12px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Tailles et hauteurs de ligne fixées : les Cotes planchers de droite restent alignées sur leur Match. */
+.comparaison .bookmaker strong, .comparaison .pire-cas { font-size: 14.5px; line-height: 20px; font-weight: 650; }
+.comparaison .match-court { font-size: 12px; line-height: 17px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comparaison .bookmaker small { margin-top: 2px; font-size: 11px; line-height: 15px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small.echec { color: var(--negatif); white-space: normal; }
 .comparaison .alerte { color: var(--attention); font-weight: 400; cursor: help; }
-.comparaison .cotes-paire { display: flex; flex-direction: column; gap: 1px; text-align: right; white-space: nowrap; font-size: 12.5px; color: var(--discret); }
-.comparaison .pire-cas { font-size: 13.5px; font-weight: 650; color: var(--texte); }
+.comparaison .cotes-paire { display: flex; flex-direction: column; gap: 1px; text-align: right; white-space: nowrap; font-size: 12px; line-height: 17px; color: var(--discret); }
+.comparaison .pire-cas { color: var(--texte); }
 .comparaison li.jamais-lu .bookmaker strong, .comparaison li.jamais-lu .pire-cas { color: var(--discret); font-weight: 500; }
 .comparaison .pied { padding: 10px 16px 14px; }
 
