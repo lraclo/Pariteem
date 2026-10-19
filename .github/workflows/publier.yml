@@ -1,0 +1,33 @@
+# Publie une version à chaque tag vX.Y.Z : le zip de l'extension devient un fichier de la Release,
+# toujours téléchargeable à https://github.com/lraclo/Pariteem/releases/latest/download/pariteem.zip
+name: Publier
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run zip
+      - run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Le tag $GITHUB_REF_NAME ne correspond pas à la version $version de package.json." >&2
+            exit 1
+          fi
+          mv ".output/pariteem-$version-chrome.zip" .output/pariteem.zip
+      - run: gh release create "$GITHUB_REF_NAME" .output/pariteem.zip --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

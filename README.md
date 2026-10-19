@@ -2,9 +2,26 @@
 
 Extension Chrome qui cherche, sur la plupart des sites de paris agréés en France, les Matchs de football dont les trois Cotes (1, N, 2) dépassent un Seuil, puis calcule le résultat d'une Paire de Matchs couverte sur ses neuf Combinaisons. Le vocabulaire est défini dans [CONTEXT.md](CONTEXT.md).
 
-## Installer (mode développeur)
+## Installer
 
-L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les extensions liées aux jeux d'argent (voir [ADR 0002](docs/adr/0002-lecture-a-la-demande-et-installation-hors-store.md)). Chaque membre l'installe une fois :
+L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les extensions liées aux jeux d'argent (voir [ADR 0002](docs/adr/0002-lecture-a-la-demande-et-installation-hors-store.md) et [ADR 0003](docs/adr/0003-distribution-par-zip.md)). Elle s'installe une fois, en deux minutes :
+
+1. Télécharger [pariteem.zip](https://github.com/lraclo/Pariteem/releases/latest/download/pariteem.zip) et le décompresser (Mac : double-clic ; Windows : clic droit › **Extraire tout**). Ranger le dossier `pariteem` obtenu à un endroit où il restera, par exemple Documents : Chrome le relit à chaque démarrage, il ne faut pas le supprimer.
+2. Dans Chrome, ouvrir `chrome://extensions`, activer **Mode développeur** (en haut à droite), cliquer sur **Charger l'extension non empaquetée** et choisir le dossier `pariteem`.
+3. Épingler l'icône Pariteem dans la barre d'outils (la pièce de puzzle, puis l'épingle).
+
+Pour passer à une nouvelle version : télécharger le nouveau zip, remplacer le contenu du dossier `pariteem`, puis cliquer sur ⟳ sous Pariteem dans `chrome://extensions`.
+
+### Publier une version
+
+```bash
+npm version patch       # 0.1.0 → 0.1.1 : met à jour package.json, commit et tag v0.1.1
+git push --follow-tags  # le workflow Publier crée la Release avec pariteem.zip
+```
+
+### En mode développeur
+
+Pour travailler sur le code :
 
 1. Installer [Node.js](https://nodejs.org) (version 20 ou plus).
 2. Récupérer le code et construire l'extension :
