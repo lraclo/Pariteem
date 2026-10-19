@@ -1,6 +1,6 @@
 import { storage } from '#imports';
 import type { Bookmaker, IdBookmaker } from './bookmakers';
-import { enParallele } from './bookmakers/commun';
+import { attendre, enParallele } from './bookmakers/commun';
 
 /** Où en est un Bookmaker pendant « Tout lire ». */
 export type EtatSite =
@@ -98,4 +98,54 @@ export function finir(sites: ToutLire['sites'], message?: string): ToutLire['sit
     else if (message) restants[id] = { etat: 'erreur', message };
   }
   return restants;
+}
+
+/** Rejette avec `message` si `promesse` n'a pas abouti en `ms` millisecondes. */
+export function avecDelai<T>(promesse: Promise<T>, ms: number, message: string): Promise<T> {
+  let minuteur: ReturnType<typeof setTimeout> | undefined;
+  const delai = new Promise<never>((_, rejeter) => (minuteur = setTimeout(() => rejeter(new Error(message)), ms)));
+  return Promise.race([promesse, delai]).finally(() => clearTimeout(minuteur));
+}
+
+export class Arret extends Error {
+  constructor() {
+    super('Lecture arrêtée');
+  }
+}
+
+/**
+ * Relance `essayer` chaque seconde jusqu'à ce qu'il réussisse : le script de page se charge avec la page.
+ * Échoue avec `message` après `delaiMs`, ou avec `Arret` dès que le Trésorier arrête la lecture.
+ */
+export async function attendreReponse(
+  essayer: () => Promise<unknown>,
+  options: { arrete: () => boolean; delaiMs: number; message: string; pause?: (ms: number) => Promise<void>; maintenant?: () => number },
+): Promise<void> {
+  const { arrete, delaiMs, message, pause = attendre, maintenant = Date.now } = options;
+  const limite = maintenant() + delaiMs;
+  while (!arrete()) {
+    try {
+      await essayer();
+      return;
+    } catch {
+      if (maintenant() > limite) throw new Error(message);
+      await pause(1000);
+    }
+  }
+  throw new Arret();
+}
+
+/**
+ * Note le nombre de Matchs lus jusqu'ici par un site en cours de lecture. Renvoie faux, sans rien changer,
+ * pour un message arrivé après la fin de sa lecture.
+ */
+export function avancer(etat: ToutLire, id: IdBookmaker, matchs: number): boolean {
+  if (etat.sites[id]?.etat !== 'lecture') return false;
+  etat.sites[id] = { etat: 'lecture', matchs };
+  return true;
+}
+
+/** L'état à publier quand le service worker redémarre au milieu d'une lecture : elle est perdue. */
+export function interrompre(etat: ToutLire): ToutLire {
+  return { ...etat, enCours: false, fenetre: null, sites: finir(etat.sites, 'Lecture interrompue') };
 }

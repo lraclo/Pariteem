@@ -28,16 +28,18 @@ export interface Bookmaker {
   urlFootball: string;
   /** Vrai si « Chercher » doit d'abord ouvrir la page football dans l'onglet. */
   lectureSurPageFootball: boolean;
+  /** Délai accordé à une lecture par « Tout lire » ; Betclic défile jusqu'en bas de sa page et prend plus de temps. */
+  delaiLectureMs: number;
 }
 
 function bookmaker(id: IdBookmaker, nom: string, domaine: string, urlFootball: string): Bookmaker {
-  return { id, nom, domaine, urlFootball, lectureSurPageFootball: false };
+  return { id, nom, domaine, urlFootball, lectureSurPageFootball: false, delaiLectureMs: 90_000 };
 }
 
 /** Les Bookmakers agréés par l'ANJ dont l'extension sait lire le football. */
 export const BOOKMAKERS: readonly Bookmaker[] = [
   bookmaker('winamax', 'Winamax', 'winamax.fr', URL_FOOTBALL_WINAMAX),
-  { ...bookmaker('betclic', 'Betclic', 'betclic.fr', URL_FOOTBALL_BETCLIC), lectureSurPageFootball: true },
+  { ...bookmaker('betclic', 'Betclic', 'betclic.fr', URL_FOOTBALL_BETCLIC), lectureSurPageFootball: true, delaiLectureMs: 150_000 },
   bookmaker('unibet', 'Unibet', 'unibet.fr', URL_FOOTBALL_UNIBET),
   bookmaker('pmu', 'PMU', 'pmu.fr', 'https://www.pmu.fr/sport/'),
   bookmaker('netbet', 'NetBet', 'netbet.fr', 'https://www.netbet.fr/football'),

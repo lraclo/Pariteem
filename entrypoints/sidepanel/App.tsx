@@ -12,6 +12,8 @@ import { useStockage } from './useStockage';
 
 type Vue = 'chercher' | 'comparer';
 
+const VUES: readonly Vue[] = ['chercher', 'comparer'];
+
 export default function App() {
   const onglet = useOngletSuivi();
   const bookmaker = bookmakerPourUrl(onglet?.url);
@@ -33,15 +35,31 @@ export default function App() {
     <main>
       <Entete site={bookmaker?.nom} />
       <nav className="onglets" role="tablist" aria-label="Vue">
-        {(['chercher', 'comparer'] as const).map((v) => (
-          <button key={v} type="button" role="tab" aria-selected={vue === v} onClick={() => setVue(v)}>
+        {VUES.map((v) => (
+          <button
+            key={v}
+            id={`onglet-${v}`}
+            type="button"
+            role="tab"
+            aria-selected={vue === v}
+            aria-controls={`vue-${v}`}
+            // Une seule tabulation pour les deux onglets ; les flèches passent de l'un à l'autre.
+            tabIndex={vue === v ? 0 : -1}
+            onClick={() => setVue(v)}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+              const autre = VUES.find((x) => x !== v)!;
+              setVue(autre);
+              document.getElementById(`onglet-${autre}`)?.focus();
+            }}
+          >
             {v === 'chercher' ? 'Chercher' : 'Comparer'}
           </button>
         ))}
       </nav>
 
       {/* Les deux vues restent montées : passer sur Comparer n'interrompt pas une recherche en cours. */}
-      <div role="tabpanel" hidden={vue !== 'chercher'}>
+      <div role="tabpanel" id="vue-chercher" aria-labelledby="onglet-chercher" hidden={vue !== 'chercher'}>
         <Chercher
           onglet={onglet}
           criteres={criteres}
@@ -54,7 +72,7 @@ export default function App() {
           maintenant={maintenant}
         />
       </div>
-      <div role="tabpanel" hidden={vue !== 'comparer'}>
+      <div role="tabpanel" id="vue-comparer" aria-labelledby="onglet-comparer" hidden={vue !== 'comparer'}>
         <Comparer
           criteres={criteres}
           setCriteres={setCriteres}
