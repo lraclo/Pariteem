@@ -1,5 +1,5 @@
-# Publie une version à chaque tag vX.Y.Z : le .crx signé et update.xml deviennent des fichiers de la Release.
-# Les Chrome inscrits à Chrome Enterprise Core lisent update.xml et se mettent à jour d'eux-mêmes.
+# Publie une version à chaque tag vX.Y.Z : le zip de l'extension devient un fichier de la Release,
+# toujours téléchargeable à https://github.com/lraclo/Pariteem/releases/latest/download/pariteem.zip
 name: Publier
 
 on:
@@ -20,9 +20,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run crx
-        env:
-          CLE_CRX: ${{ secrets.CLE_CRX }}
-      - run: gh release create "$GITHUB_REF_NAME" .output/pariteem.crx .output/update.xml --title "$GITHUB_REF_NAME" --generate-notes
+      - run: npm run zip
+      - run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Le tag $GITHUB_REF_NAME ne correspond pas à la version $version de package.json." >&2
+            exit 1
+          fi
+          mv ".output/pariteem-$version-chrome.zip" .output/pariteem.zip
+      - run: gh release create "$GITHUB_REF_NAME" .output/pariteem.zip --title "$GITHUB_REF_NAME" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
