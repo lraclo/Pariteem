@@ -59,8 +59,10 @@ export default function App() {
 
   const derniere = bookmaker ? sauvegardes[bookmaker.id] : undefined;
   const tous = derniere?.matchs ?? [];
-  const selection = derniere?.selection ?? [];
   const liste = classement(tous, { ...criteres, maintenant });
+  // Seuls les Matchs encore au Classement comptent : un Match commencé, ou sorti par le Seuil ou la Fenêtre,
+  // ne doit pas occuper une des deux places de la Paire sans être visible.
+  const selection = (derniere?.selection ?? []).filter((id) => liste.some((m) => m.id === id));
 
   if (!bookmaker || !onglet?.id) {
     return (
@@ -79,16 +81,15 @@ export default function App() {
   const idBookmaker = bookmaker.id;
   const doitAllerSurFootball = bookmaker.lectureSurPageFootball && !estSurPageFootball(bookmaker, onglet.url);
 
-  /** Remplace (ou efface) la dernière recherche du Bookmaker affiché. */
-  function enregistrer(r: Recherche | undefined, base = sauvegardes!) {
-    const { [idBookmaker]: _, ...autres } = base;
-    setSauvegardes(r ? { ...autres, [idBookmaker]: r } : autres);
+  /** Remplace la dernière recherche du Bookmaker affiché. */
+  function enregistrer(r: Recherche, base = sauvegardes!) {
+    setSauvegardes({ ...base, [idBookmaker]: r });
   }
 
   async function chercher() {
     const numero = ++recherche.current;
+    // Les résultats précédents restent affichés : une lecture qui échoue ne doit pas les effacer.
     setEtat({ type: 'lecture', matchs: null });
-    enregistrer(undefined);
     let reponse: ReponseChercher;
     try {
       reponse = await browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher);
@@ -119,7 +120,6 @@ export default function App() {
     if (paire) choisir(paire.map((m) => m.id));
   }
 
-  // Seuls les Matchs encore au Classement comptent : un Match commencé en sort.
   const [a, b] = selection.map((id) => liste.find((m) => m.id === id));
   const paire: Paire | null = a && b ? [a, b] : null;
 
@@ -179,7 +179,7 @@ export default function App() {
           <p className="aide">{etat.matchs === null ? 'Lecture des Matchs…' : `${etat.matchs} Matchs chargés…`}</p>
         )}
         {etat.type === 'erreur' && <p className="erreur">{etat.message}</p>}
-        {etat.type === 'pret' && derniere && <Fraicheur luA={derniere.luA} maintenant={maintenant} />}
+        {etat.type !== 'lecture' && derniere && <Fraicheur luA={derniere.luA} maintenant={maintenant} />}
       </section>
 
       {derniere && (
