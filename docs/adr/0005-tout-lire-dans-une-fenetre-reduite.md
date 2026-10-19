@@ -1,6 +1,6 @@
 # « Tout lire » ouvre les sites dans une fenêtre réduite, mené par le service worker
 
-Pour savoir sur quel Bookmaker lancer la prochaine Phase, le Trésorier compare les Meilleures Paires de tous les Bookmakers (vue Comparer). Le bouton « Tout lire » les lit d'un clic : le service worker ouvre une fenêtre Chrome à part, réduite et non focalisée, y ouvre la page football de chaque Bookmaker dans un onglet, attend que le script de page réponde, lance la même lecture que « Chercher », enregistre la Lecture, puis ferme l'onglet. La fenêtre est fermée à la fin ou sur « Arrêter ». La barre d'onglets du Trésorier ne bouge pas.
+Pour savoir sur quel Bookmaker lancer la prochaine Phase, le Trésorier compare les Meilleures Paires de tous les Bookmakers (vue Comparer). Le bouton « Lire les 14 Bookmakers » (« Tout lire » dans le code) les lit d'un clic : le service worker ouvre une fenêtre Chrome à part, réduite et non focalisée, y ouvre la page football de chaque Bookmaker dans un onglet, attend que le script de page réponde, lance la même lecture que « Chercher », enregistre la Lecture, puis ferme l'onglet. La fenêtre est fermée à la fin ou sur « Arrêter ». La barre d'onglets du Trésorier ne bouge pas.
 
 La lecture reste conforme à l'ADR 0002 : elle n'a lieu qu'au clic, dans le navigateur du Trésorier, avec ses cookies, et jamais en continu (pas de minuterie, rien à l'ouverture du panneau ou de Chrome). Aucune Lecture ne quitte le navigateur.
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import type { IdBookmaker } from '@/lib/bookmakers';
+import { BOOKMAKERS, type IdBookmaker } from '@/lib/bookmakers';
 import { comparer, type LigneComparaison } from '@/lib/domaine/comparaison';
+import { cotePlancher } from '@/lib/domaine/match';
 import { selections, type Lectures } from '@/lib/lectures';
 import type { DemandeArreter, DemandeToutLire } from '@/lib/messages';
 import { CONDITIONS_PAR_DEFAUT, type ConditionsFreebet, type Reglages } from '@/lib/reglages';
@@ -41,7 +42,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
   function lancer() {
     const maintenant = Date.now();
     if (!avertissement && course && maintenant - course.debut < TOUT_LU_RECEMMENT_MS) {
-      setAvertissement(`Attention : vous avez déjà tout lu ${formatDepuis(course.debut, maintenant)}. Cliquez de nouveau pour relire quand même.`);
+      setAvertissement(`Attention : Vous avez déjà tout lu ${formatDepuis(course.debut, maintenant)}. Cliquez de nouveau pour relire quand même.`);
       return;
     }
     setAvertissement(null);
@@ -65,7 +66,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         {course?.enCours ? (
           <button className="principal arreter" onClick={() => envoyer({ type: 'arreter' })}>Arrêter</button>
         ) : (
-          <button className="principal" onClick={lancer}>{avertissement ? 'Tout relire quand même' : 'Tout lire'}</button>
+          <button className="principal" onClick={lancer}>{avertissement ? 'Relire quand même' : `Lire les ${BOOKMAKERS.length} Bookmakers`}</button>
         )}
         {course?.enCours && <p className="aide">Lecture en cours : {termines} sur {sites.length || lignes.length} Bookmakers terminés.</p>}
         {!course?.enCours && course?.erreur && <p className="erreur">{course.erreur}</p>}
@@ -108,7 +109,12 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
                   ) : null}
                   <Statut ligne={l} course={course} maintenant={maintenant} />
                 </span>
-                <span className="pire-cas">{l.type === 'paire' ? formatCote(l.pireCas) : '–'}</span>
+                {/* Le Pire cas, puis la Cote plancher de chaque Match, alignées sur leur ligne : Pire cas = produit des deux. */}
+                <span className="cotes-paire">
+                  <span className="pire-cas">{l.type === 'paire' ? formatCote(l.pireCas) : '–'}</span>
+                  {l.type === 'paire' &&
+                    l.paire.map((m) => <span key={m.id} title="Cote plancher du Match">{formatCote(cotePlancher(m))}</span>)}
+                </span>
               </button>
             </li>
           ))}
