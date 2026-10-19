@@ -26,13 +26,14 @@ export default defineBackground(() => {
   browser.action.setBadgeBackgroundColor({ color: '#1a7f37' });
   browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
+  // Les onglets de « Tout lire » se ferment vite : un onglet déjà fermé n'a plus de badge à mettre à jour.
   function majBadge(tabId: number, url: string | undefined) {
-    browser.action.setBadgeText({ tabId, text: bookmakerPourUrl(url) ? '✓' : '' });
+    browser.action.setBadgeText({ tabId, text: bookmakerPourUrl(url) ? '✓' : '' }).catch(() => {});
   }
 
   browser.tabs.onUpdated.addListener((tabId, _changement, onglet) => majBadge(tabId, onglet.url));
-  browser.tabs.onActivated.addListener(async ({ tabId }) => {
-    majBadge(tabId, (await browser.tabs.get(tabId)).url);
+  browser.tabs.onActivated.addListener(({ tabId }) => {
+    browser.tabs.get(tabId).then((onglet) => majBadge(tabId, onglet.url), () => {});
   });
 
   // « Tout lire » (ADR 0005) : mené ici plutôt que dans le panneau, pour que fermer le panneau ne l'arrête pas.
