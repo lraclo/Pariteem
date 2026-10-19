@@ -20,12 +20,12 @@ interface Props {
   conditions: Partial<Record<IdBookmaker, ConditionsFreebet>>;
   lectures: Lectures;
   maintenant: number;
-  /** Appelé après l'ouverture du site d'un Bookmaker, pour passer sur Chercher. */
-  surOuverture: () => void;
+  /** Affiche ce Bookmaker dans Chercher. */
+  surChoix: (id: IdBookmaker) => void;
 }
 
 /** Les Bookmakers classés par Pire cas de leur Meilleure Paire, d'après leur dernière Lecture. */
-export function Comparer({ criteres, setCriteres, conditions, lectures, maintenant, surOuverture }: Props) {
+export function Comparer({ criteres, setCriteres, conditions, lectures, maintenant, surChoix }: Props) {
   // Recalculé seulement quand les Lectures ou les critères changent, pas à chaque progression de la lecture.
   const lignes = useMemo(() => comparer(lectures, { ...criteres, maintenant }, conditions), [lectures, criteres, conditions, maintenant]);
   const lus = lignes.filter((l) => l.type !== 'jamais-lu').length;
@@ -55,13 +55,15 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
     envoyer({ type: 'tout-lire' });
   }
 
-  /** Ouvre le site du Bookmaker et y coche la Paire, pour afficher tout de suite le Calculateur. */
-  async function ouvrir(l: LigneComparaison) {
+  /**
+   * Affiche le Bookmaker dans Chercher avec sa Paire cochée, pour voir tout de suite le Calculateur. Son site
+   * ne s'ouvre pas : « Voir » sur un Match l'ouvre au besoin.
+   */
+  async function afficher(l: LigneComparaison) {
     if (l.type === 'paire') {
       await selections.setValue({ ...(await selections.getValue()), [l.bookmaker.id]: l.paire.map((m) => m.id) });
     }
-    surOuverture();
-    await browser.tabs.create({ url: l.bookmaker.urlFootball, active: true });
+    surChoix(l.bookmaker.id);
   }
 
   return (
@@ -95,7 +97,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         <ol>
           {lignes.map((l) => (
             <li key={l.bookmaker.id} className={l.type === 'jamais-lu' ? 'jamais-lu' : ''}>
-              <button type="button" onClick={() => ouvrir(l)} title={`Ouvrir ${l.bookmaker.nom}`}>
+              <button type="button" onClick={() => afficher(l)} title={`Afficher ${l.bookmaker.nom} dans Chercher`}>
                 <span className="bookmaker">
                   <strong>
                     {l.bookmaker.nom}
@@ -152,7 +154,7 @@ function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course
     case 'lu-recemment':
       return <small>Lu récemment</small>;
     case 'a-la-main':
-      return <small className="a-relancer">À lire à la main : cliquez pour ouvrir {ligne.bookmaker.nom}</small>;
+      return <small className="a-relancer">À lire à la main sur son site</small>;
   }
   return <small>{lueA === null ? 'Pas encore lu' : <AgeLecture lueA={lueA} maintenant={maintenant} />}</small>;
 }

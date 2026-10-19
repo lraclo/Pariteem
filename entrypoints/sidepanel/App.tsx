@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { bookmakerPourUrl } from '@/lib/bookmakers';
+import { BOOKMAKERS, bookmakerPourUrl, type IdBookmaker } from '@/lib/bookmakers';
 import { selections } from '@/lib/lectures';
 import { conditionsFreebet, reglages } from '@/lib/reglages';
 import { Chercher } from './Chercher';
@@ -16,7 +16,11 @@ const VUES: readonly Vue[] = ['chercher', 'comparer'];
 
 export default function App() {
   const onglet = useOngletSuivi();
-  const bookmaker = bookmakerPourUrl(onglet?.url);
+  const bookmakerOnglet = bookmakerPourUrl(onglet?.url);
+  // Bookmaker choisi dans Comparer : affiché dans Chercher sans ouvrir son site, jusqu'à ce que l'onglet
+  // passe sur le site d'un autre Bookmaker. Un onglet hors Bookmaker (ou sans adresse) le garde.
+  const [choisi, setChoisi] = useState<IdBookmaker | null>(null);
+  const bookmaker = BOOKMAKERS.find((b) => b.id === choisi) ?? bookmakerOnglet;
   const [criteres, setCriteres] = useStockage(reglages);
   const [conditions, setConditions] = useStockage(conditionsFreebet);
   const [choix, setChoix] = useStockage(selections);
@@ -28,6 +32,10 @@ export default function App() {
   useEffect(() => {
     if (onglet !== undefined) setVue((v) => v ?? (bookmakerPourUrl(onglet?.url) ? 'chercher' : 'comparer'));
   }, [onglet]);
+
+  useEffect(() => {
+    if (bookmakerOnglet) setChoisi((c) => (c === bookmakerOnglet.id ? c : null));
+  }, [bookmakerOnglet?.id]);
 
   if (!criteres || !conditions || !choix || !lectures || onglet === undefined || !vue) return null;
 
@@ -62,6 +70,7 @@ export default function App() {
       <div role="tabpanel" id="vue-chercher" aria-labelledby="onglet-chercher" hidden={vue !== 'chercher'}>
         <Chercher
           onglet={onglet}
+          bookmaker={bookmaker}
           criteres={criteres}
           setCriteres={setCriteres}
           conditions={conditions}
@@ -79,7 +88,10 @@ export default function App() {
           conditions={conditions}
           lectures={lectures}
           maintenant={maintenant}
-          surOuverture={() => setVue('chercher')}
+          surChoix={(id) => {
+            setChoisi(id);
+            setVue('chercher');
+          }}
         />
       </div>
       <NouvelleVersion />

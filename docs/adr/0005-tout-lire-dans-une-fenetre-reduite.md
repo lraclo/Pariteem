@@ -18,7 +18,7 @@ Résultat de l'essai (19 octobre 2026, Chrome sur Mac) : 18 Matchs lus dans la f
 
 Seconde et dernière tentative : les Bookmakers lus par défilement (`lectureParDefilement`, aujourd'hui Betclic seul) sont ouverts dans une petite fenêtre normale (520 × 560), non focalisée, posée dans le coin bas-droit de la fenêtre du Trésorier, et fermée après leur lecture. Elle reste visible pour Chrome pendant une minute environ. Si elle ne suffit pas non plus, Betclic passe dans `A_LIRE_A_LA_MAIN`.
 
-Résultat de la seconde tentative : à compléter.
+Résultat de la seconde tentative (19 octobre 2026) : 636 Matchs lus par « Tout lire », autant qu'avec « Chercher ». Betclic reste dans « Tout lire », par cette petite fenêtre.
 
 Dans tous les cas, une lecture de « Tout lire » qui ramène moins de la moitié des Matchs à venir de la Lecture précédente (`lectureIncomplete`) ne la remplace pas : le site est marqué en erreur et sa Lecture précédente est gardée. Lors du premier essai, les 18 Matchs avaient remplacé les 636.
 
