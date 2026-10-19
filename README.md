@@ -2,9 +2,13 @@
 
 Extension Chrome qui cherche, sur Winamax ou Betclic, les Matchs de football dont les trois Cotes (1, N, 2) dépassent un Seuil, puis calcule le résultat d'une Paire de Matchs couverte sur ses neuf Combinaisons. Le vocabulaire est défini dans [CONTEXT.md](CONTEXT.md).
 
-## Installer (mode développeur)
+## Installer
 
-L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les extensions liées aux jeux d'argent (voir [ADR 0002](docs/adr/0002-lecture-a-la-demande-et-installation-hors-store.md)). Chaque membre l'installe une fois :
+L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les extensions liées aux jeux d'argent (voir [ADR 0002](docs/adr/0002-lecture-a-la-demande-et-installation-hors-store.md)). Les Trésoriers l'installent avec une commande à coller dans le Terminal, fournie par la Liste ; elle se met ensuite à jour toute seule. Mise en place, publication des versions et message à envoyer : [docs/distribution.md](docs/distribution.md).
+
+### En mode développeur
+
+Pour travailler sur le code :
 
 1. Installer [Node.js](https://nodejs.org) (version 20 ou plus).
 2. Récupérer le code et construire l'extension :
@@ -19,7 +23,7 @@ L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les e
 
 Après avoir chargé ou rechargé l'extension, rechargez aussi les onglets Winamax et Betclic déjà ouverts.
 
-Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Pariteem dans `chrome://extensions`.
+Pour mettre à jour en mode développeur : `git pull`, `npm run build`, puis le bouton ⟳ de Pariteem dans `chrome://extensions`.
 
 ## Utiliser
 
@@ -40,6 +44,7 @@ Les réglages sont mémorisés, pas les résultats : les Cotes bougent, relancez
 npm run dev      # reconstruit et recharge l'extension à chaque modification (charger .output/chrome-mv3-dev une fois)
 npm test         # tests du Classement, du calculateur et des lecteurs de pages
 npm run compile  # vérification TypeScript
+npm run crx      # .crx signé et update.xml dans .output/ (clé ~/.config/pariteem/cle-crx.pem)
 ```
 
 - `lib/domaine/` : Classement, Pire cas, calculs des deux Phases. Aucune dépendance au navigateur.

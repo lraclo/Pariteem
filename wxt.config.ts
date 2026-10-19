@@ -9,5 +9,7 @@ export default defineConfig({
       'Trouve les Matchs de football dont les trois cotes dépassent un seuil, sur Winamax et Betclic.',
     permissions: ['sidePanel', 'storage', 'tabs'],
     action: { default_title: 'Pariteem' },
+    // Chrome y cherche les nouvelles versions de l'extension installée par Chrome Enterprise Core.
+    update_url: 'https://github.com/lraclo/Pariteem/releases/latest/download/update.xml',
   },
 });
