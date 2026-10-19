@@ -67,6 +67,18 @@ describe('phaseDepot', () => {
 });
 
 describe('phaseFreebet', () => {
+  it('avec un dépôt, perd 100 € sur chaque Combinaison sauf la plus haute, que le dépôt couvre', () => {
+    const avec = phaseFreebet(paire, 100).lignes;
+    const sans = phaseFreebet(paire, 100, { avecDepot: false }).lignes;
+    const plusHaute = Math.max(...avec.map((l) => l.combinaison.coteCombinee));
+    avec.forEach((l, i) => {
+      // Dépôt gagnant : mise rendue avec le gain (100 × cote) moins les 100 € déposés,
+      // soit exactement le gain d'un Freebet (100 × (cote − 1)).
+      const ecart = l.combinaison.coteCombinee === plusHaute ? 0 : -100;
+      expect(l.net - sans[i]!.net).toBeCloseTo(ecart);
+    });
+  });
+
   it('place par défaut le dépôt sur la plus grosse Cote combinée', () => {
     const resultat = phaseFreebet(paire, 100);
     const depots = resultat.lignes.filter((l) => l.mise === 'depot');

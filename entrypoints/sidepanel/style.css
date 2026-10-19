@@ -100,7 +100,7 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .comparaison li > button:hover { background: var(--case); }
 .comparaison .bookmaker { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 /* Tailles et hauteurs de ligne fixées : les Cotes planchers de droite restent alignées sur leur Match. */
-.comparaison .bookmaker strong, .comparaison .pire-cas { font-size: 14.5px; line-height: 20px; font-weight: 650; }
+.comparaison .bookmaker strong, .comparaison .pire-cas { font-size: 13.5px; line-height: 20px; font-weight: 650; }
 .comparaison .match-court { font-size: 12px; line-height: 17px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small { margin-top: 2px; font-size: 11px; line-height: 15px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small.echec { color: var(--negatif); white-space: normal; }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BOOKMAKERS, type IdBookmaker } from '@/lib/bookmakers';
+import type { IdBookmaker } from '@/lib/bookmakers';
 import { comparer, type LigneComparaison } from '@/lib/domaine/comparaison';
 import { cotePlancher } from '@/lib/domaine/match';
 import { selections, type Lectures } from '@/lib/lectures';
@@ -66,7 +66,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         {course?.enCours ? (
           <button className="principal arreter" onClick={() => envoyer({ type: 'arreter' })}>Arrêter</button>
         ) : (
-          <button className="principal" onClick={lancer}>{avertissement ? 'Relire quand même' : `Lire les ${BOOKMAKERS.length} Bookmakers`}</button>
+          <button className="principal" onClick={lancer}>{avertissement ? 'Relire quand même' : 'Lire tous les Bookmakers'}</button>
         )}
         {course?.enCours && <p className="aide">Lecture en cours : {termines} sur {sites.length || lignes.length} Bookmakers terminés.</p>}
         {!course?.enCours && course?.erreur && <p className="erreur">{course.erreur}</p>}
