@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { IdBookmaker } from '@/lib/bookmakers';
 import { comparer, type LigneComparaison } from '@/lib/domaine/comparaison';
 import { cotePlancher } from '@/lib/domaine/match';
@@ -26,26 +26,32 @@ interface Props {
 
 /** Les Bookmakers classés par Pire cas de leur Meilleure Paire, d'après leur dernière Lecture. */
 export function Comparer({ criteres, setCriteres, conditions, lectures, maintenant, surOuverture }: Props) {
-  const lignes = comparer(lectures, { ...criteres, maintenant }, conditions);
+  // Recalculé seulement quand les Lectures ou les critères changent, pas à chaque progression de la lecture.
+  const lignes = useMemo(() => comparer(lectures, { ...criteres, maintenant }, conditions), [lectures, criteres, conditions, maintenant]);
   const lus = lignes.filter((l) => l.type !== 'jamais-lu').length;
   const [course] = useStockage(toutLire);
   const sites = Object.values(course?.sites ?? {});
   const termines = sites.filter((e) => e.etat !== 'attente' && e.etat !== 'lecture').length;
 
-  // Avertissement affiché au premier clic quand tout a été lu il y a peu ; un second clic relit quand même.
-  const [avertissement, setAvertissement] = useState<string | null>(null);
+  // Premier clic peu après une lecture de tous les Bookmakers : on prévient, et un second clic relit quand même.
+  // L'avertissement vaut pour cette lecture-là (son heure de lancement) et disparaît avec les 5 minutes.
+  const [prevenuPour, setPrevenuPour] = useState<number | null>(null);
+  const luRecemment = (a: number) => course !== null && a - course.debut < TOUT_LU_RECEMMENT_MS;
+  const avertissement =
+    course && !course.enCours && prevenuPour === course.debut && luRecemment(maintenant)
+      ? `Attention : Vous avez déjà tout lu ${formatDepuis(course.debut, maintenant)}. Cliquez de nouveau pour relire quand même.`
+      : null;
 
   function envoyer(message: DemandeToutLire | DemandeArreter) {
     browser.runtime.sendMessage(message).catch(() => {});
   }
 
   function lancer() {
-    const maintenant = Date.now();
-    if (!avertissement && course && maintenant - course.debut < TOUT_LU_RECEMMENT_MS) {
-      setAvertissement(`Attention : Vous avez déjà tout lu ${formatDepuis(course.debut, maintenant)}. Cliquez de nouveau pour relire quand même.`);
+    if (course && luRecemment(Date.now()) && prevenuPour !== course.debut) {
+      setPrevenuPour(course.debut);
       return;
     }
-    setAvertissement(null);
+    setPrevenuPour(null);
     envoyer({ type: 'tout-lire' });
   }
 
@@ -70,7 +76,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         )}
         {course?.enCours && <p className="aide">Lecture en cours : {termines} sur {sites.length || lignes.length} Bookmakers terminés.</p>}
         {!course?.enCours && course?.erreur && <p className="erreur">{course.erreur}</p>}
-        {avertissement && !course?.enCours && <p className="attention">{avertissement}</p>}
+        {avertissement && <p className="attention">{avertissement}</p>}
         <p className="aide">À utiliser avec modération.</p>
       </section>
 

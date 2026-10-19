@@ -1,5 +1,4 @@
 import { BOOKMAKERS, bookmakerPourUrl, type Bookmaker, type IdBookmaker } from '@/lib/bookmakers';
-import { attendre } from '@/lib/bookmakers/commun';
 import { enregistrerLecture, lireLecture } from '@/lib/lectures';
 import type {
   DemandeArreter,
@@ -9,18 +8,10 @@ import type {
   Progression,
   ReponseChercher,
 } from '@/lib/messages';
-import { finir, lireTout, toutLire, type EtatSite, type ToutLire } from '@/lib/tout-lire';
+import { attendreReponse, avancer, avecDelai, finir, interrompre, lireTout, toutLire, type ToutLire } from '@/lib/tout-lire';
 
 /** Délai pour que la page s'ouvre et charge le script de page. */
 const CHARGEMENT_MS = 30_000;
-/** Délai de lecture d'un site ; Betclic défile jusqu'en bas de sa page et prend plus de temps. */
-const lectureMs = (b: Bookmaker) => (b.id === 'betclic' ? 150_000 : 90_000);
-
-function avecDelai<T>(promesse: Promise<T>, ms: number, message: string): Promise<T> {
-  let minuteur: ReturnType<typeof setTimeout> | undefined;
-  const delai = new Promise<never>((_, rejeter) => (minuteur = setTimeout(() => rejeter(new Error(message)), ms)));
-  return Promise.race([promesse, delai]).finally(() => clearTimeout(minuteur));
-}
 
 export default defineBackground(() => {
   browser.action.setBadgeBackgroundColor({ color: '#1a7f37' });
@@ -50,30 +41,20 @@ export default defineBackground(() => {
   toutLire.getValue().then((etat) => {
     if (!etat?.enCours || course) return;
     if (etat.fenetre !== null) browser.windows.remove(etat.fenetre).catch(() => {});
-    publier({ ...etat, enCours: false, fenetre: null, sites: finir(etat.sites, 'Lecture interrompue') });
+    publier(interrompre(etat));
   });
-
-  /** Attend que le script de page réponde, en le relançant chaque seconde : il se charge avec la page. */
-  async function attendrePage(tabId: number, bookmaker: Bookmaker, arrete: () => boolean) {
-    const limite = Date.now() + CHARGEMENT_MS;
-    while (!arrete()) {
-      try {
-        await browser.tabs.sendMessage(tabId, { type: 'ping' } satisfies DemandePing);
-        return;
-      } catch {
-        if (Date.now() > limite) throw new Error(`La page de ${bookmaker.nom} ne s'est pas chargée en ${CHARGEMENT_MS / 1000} s.`);
-        await attendre(1000);
-      }
-    }
-  }
 
   async function lireDansFenetre(bookmaker: Bookmaker, windowId: number, arrete: () => boolean): Promise<number> {
     const onglet = await browser.tabs.create({ windowId, url: bookmaker.urlFootball, active: false });
     const tabId = onglet.id!;
     ongletsLus.set(tabId, bookmaker.id);
     try {
-      await attendrePage(tabId, bookmaker, arrete);
-      const ms = lectureMs(bookmaker);
+      await attendreReponse(() => browser.tabs.sendMessage(tabId, { type: 'ping' } satisfies DemandePing), {
+        arrete,
+        delaiMs: CHARGEMENT_MS,
+        message: `La page de ${bookmaker.nom} ne s'est pas chargée en ${CHARGEMENT_MS / 1000} s.`,
+      });
+      const ms = bookmaker.delaiLectureMs;
       const reponse = await avecDelai<ReponseChercher>(
         browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher),
         ms,
@@ -139,11 +120,7 @@ export default defineBackground(() => {
     else if (message?.type === 'arreter') arreter();
     else if (message?.type === 'progression' && course) {
       const id = ongletsLus.get(envoyeur.tab?.id ?? -1);
-      const actuel: EtatSite | undefined = id && course.etat.sites[id];
-      if (id && actuel?.etat === 'lecture') {
-        course.etat.sites[id] = { etat: 'lecture', matchs: message.matchs };
-        publier(course.etat);
-      }
+      if (id && avancer(course.etat, id, message.matchs)) publier(course.etat);
     }
   });
 });

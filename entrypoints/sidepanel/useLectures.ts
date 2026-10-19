@@ -5,8 +5,18 @@ import { lireLectures, surveillerLectures, type Lectures } from '@/lib/lectures'
 export function useLectures(): Lectures | null {
   const [lectures, setLectures] = useState<Lectures | null>(null);
   useEffect(() => {
-    lireLectures().then(setLectures);
-    return surveillerLectures((id, lecture) => setLectures((l) => ({ ...l, [id]: lecture ?? undefined })));
+    // Une Lecture enregistrée pendant le premier chargement est plus récente que lui : elle l'emporte.
+    let chargees = false;
+    const recues: Lectures = {};
+    const arreter = surveillerLectures((id, lecture) => {
+      if (chargees) setLectures((l) => ({ ...l, [id]: lecture ?? undefined }));
+      else recues[id] = lecture ?? undefined;
+    });
+    lireLectures().then((initiales) => {
+      chargees = true;
+      setLectures({ ...initiales, ...recues });
+    });
+    return arreter;
   }, []);
   return lectures;
 }
