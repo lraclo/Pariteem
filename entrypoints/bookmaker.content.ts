@@ -1,22 +1,23 @@
-import { bookmakerPourUrl } from '@/lib/bookmakers';
-import { chercherBetclic } from '@/lib/bookmakers/betclic';
-import { chercherWinamax } from '@/lib/bookmakers/winamax';
+import { BOOKMAKERS, bookmakerPourUrl } from '@/lib/bookmakers';
+import { LECTEURS } from '@/lib/bookmakers/lecteurs';
 import type { Match } from '@/lib/domaine/match';
 import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messages';
 
 export default defineContentScript({
-  matches: ['*://*.winamax.fr/*', '*://*.betclic.fr/*'],
+  // `*.domaine` couvre aussi le domaine nu.
+  matches: BOOKMAKERS.map((b) => `*://*.${b.domaine}/*`),
   main() {
     let enCours: Promise<Match[]> | null = null;
 
     function chercher(): Promise<Match[]> {
       const bookmaker = bookmakerPourUrl(location.href);
-      if (bookmaker?.id === 'winamax') return chercherWinamax();
-      if (bookmaker?.id === 'betclic')
-        return chercherBetclic((cartes) => {
-          browser.runtime.sendMessage({ type: 'progression', cartes } satisfies Progression).catch(() => {});
-        });
-      return Promise.reject(new Error('Site non pris en charge'));
+      if (!bookmaker) return Promise.reject(new Error('Site non pris en charge'));
+      return LECTEURS[bookmaker.id]((matchs) => {
+        browser.runtime.sendMessage({ type: 'progression', matchs } satisfies Progression).catch(() => {});
+      }).then((matchs) => {
+        if (matchs.length === 0) throw new Error(`${bookmaker.nom} n'a renvoyé aucun Match à venir. Réessayez dans un instant.`);
+        return matchs;
+      });
     }
 
     browser.runtime.onMessage.addListener((message: DemandeChercher, _envoyeur, repondre) => {

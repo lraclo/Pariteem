@@ -5,6 +5,14 @@ describe('bookmakerPourUrl', () => {
   it('reconnaît les Bookmakers pris en charge et leurs sous-domaines', () => {
     expect(bookmakerPourUrl('https://www.winamax.fr/paris-sportifs')?.id).toBe('winamax');
     expect(bookmakerPourUrl('https://www.betclic.fr/')?.id).toBe('betclic');
+    expect(bookmakerPourUrl('https://sports.olybet.fr/pre-match')?.id).toBe('olybet');
+    expect(bookmakerPourUrl('https://betsson.fr/fr')?.id).toBe('betsson');
+  });
+
+  it('donne à chaque Bookmaker un domaine distinct, qui porte sa page football', () => {
+    const domaines = BOOKMAKERS.map((b) => b.domaine);
+    expect(new Set(domaines).size).toBe(domaines.length);
+    for (const b of BOOKMAKERS) expect(bookmakerPourUrl(b.urlFootball)?.id).toBe(b.id);
   });
 
   it('ignore les autres sites, y compris les imitations de domaine', () => {

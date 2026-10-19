@@ -1,6 +1,6 @@
 {
   "name": "pariteem",
-  "description": "Trouve les Matchs de football dont les trois cotes dépassent un seuil, sur Winamax et Betclic.",
+  "description": "Trouve les Matchs de football dont les trois cotes dépassent un seuil, sur les principaux sites de paris agréés en France.",
   "private": true,
   "version": "0.1.0",
   "type": "module",

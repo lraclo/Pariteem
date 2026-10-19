@@ -7,8 +7,9 @@ export interface DemandeChercher {
 
 export type ReponseChercher = { ok: true; matchs: Match[] } | { ok: false; erreur: string };
 
-/** Script de page → panneau, pendant le défilement de Betclic. */
+/** Script de page → panneau, pendant une lecture en plusieurs étapes. */
 export interface Progression {
   type: 'progression';
-  cartes: number;
+  /** Matchs lus jusqu'ici. */
+  matchs: number;
 }
