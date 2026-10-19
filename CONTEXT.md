@@ -91,3 +91,13 @@ _Avoid_: bonus, pari gratuit
 **Phase freebet**:
 L'étape suivante sur une nouvelle Paire : les huit Titulaires perdants misent leur Freebet, et la neuvième Combinaison est couverte soit par le dépôt d'un nouveau Titulaire, soit par le Freebet d'un neuvième Titulaire déjà perdant (aucun argent réel engagé).
 _Avoid_: tour 2, phase 2
+
+## Lectures
+
+**Lecture**:
+Les Matchs d'un Bookmaker lus à un moment donné, avec l'heure de la lecture ; seule la dernière est gardée, même après un redémarrage de Chrome, et ses Matchs commencés n'en sortent qu'au Classement.
+_Avoid_: recherche, synchronisation, scan
+
+**Comparaison**:
+La vue qui classe les Bookmakers par Pire cas de leur Meilleure Paire, d'après leur dernière Lecture ; les Phases et leur Espérance se voient en ouvrant le Bookmaker.
+_Avoid_: comparateur, tableau comparatif

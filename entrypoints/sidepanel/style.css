@@ -29,7 +29,9 @@ h2 { font-size: 14px; font-weight: 650; margin: 0; }
 p { margin: 0; }
 .aide { color: var(--discret); font-size: 12px; }
 .erreur { color: var(--negatif); font-size: 12.5px; }
-.perimees { color: var(--attention); }
+.a-relancer { color: var(--attention); }
+.attention { color: var(--attention); font-size: 12.5px; }
+.perimee { color: var(--negatif); }
 .positif { color: var(--positif); }
 .negatif { color: var(--negatif); }
 a { color: var(--accent-texte); font-weight: 600; }
@@ -38,6 +40,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 button:disabled { opacity: 0.6; cursor: default; }
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.principal { height: 44px; margin-top: 4px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; }
+button.principal.arreter { border: 1px solid var(--bord); background: var(--fond); color: var(--negatif); }
 button.secondaire { flex: none; white-space: nowrap; height: 32px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--accent-ligne); background: var(--fond); color: var(--accent-texte); font-size: 12.5px; font-weight: 600; }
 input { font: inherit; color: inherit; }
 input[type='checkbox'] { accent-color: var(--accent); width: 17px; height: 17px; margin: 0; cursor: pointer; }
@@ -47,6 +50,12 @@ input[type='checkbox'] { accent-color: var(--accent); width: 17px; height: 17px;
 .marque { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; color: var(--accent-texte); }
 .pastille { width: 10px; height: 10px; border-radius: 3px; background: var(--accent); }
 .entete .aide { font-size: 12.5px; }
+
+/* Onglets Chercher | Comparer */
+.onglets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 16px; border-bottom: 1px solid var(--filet); }
+.onglets button { height: 40px; color: var(--discret); font-size: 13.5px; font-weight: 500; }
+.onglets button:hover { color: var(--texte); }
+.onglets button[aria-selected='true'] { color: var(--texte); font-weight: 650; box-shadow: inset 0 -2px var(--accent); }
 
 /* Critères */
 .reglages .ligne { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 12px; color: var(--discret); }
@@ -80,6 +89,26 @@ input[type='checkbox'] { accent-color: var(--accent); width: 17px; height: 17px;
 .cotes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); text-align: right; }
 label.cotes { cursor: pointer; color: var(--texte-2); }
 .cotes .plancher { padding: 1px 3px; margin-right: -3px; border-radius: 3px; background: var(--accent-teinte); color: var(--accent-texte); font-weight: 650; }
+
+/* Comparaison */
+.comparaison { padding: 0; gap: 0; }
+.comparaison .entete-liste, .comparaison li > button { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 8px; padding-inline: 16px; }
+.comparaison .entete-liste > :not(:first-child) { text-align: right; }
+.comparaison ol { list-style: none; margin: 0; padding: 0; }
+.comparaison li { border-bottom: 1px solid var(--filet-leger); }
+.comparaison li > button { width: 100%; align-items: start; padding-block: 11px; text-align: left; }
+.comparaison li > button:hover { background: var(--case); }
+.comparaison .bookmaker { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+/* Tailles et hauteurs de ligne fixées : les Cotes planchers de droite restent alignées sur leur Match. */
+.comparaison .bookmaker strong, .comparaison .pire-cas { font-size: 13.5px; line-height: 20px; font-weight: 650; }
+.comparaison .match-court { font-size: 12px; line-height: 17px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comparaison .bookmaker small { margin-top: 2px; font-size: 11px; line-height: 15px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comparaison .bookmaker small.echec { color: var(--negatif); white-space: normal; }
+.comparaison .alerte { color: var(--attention); font-weight: 400; cursor: help; }
+.comparaison .cotes-paire { display: flex; flex-direction: column; gap: 1px; text-align: right; white-space: nowrap; font-size: 12px; line-height: 17px; color: var(--discret); }
+.comparaison .pire-cas { color: var(--texte); }
+.comparaison li.jamais-lu .bookmaker strong, .comparaison li.jamais-lu .pire-cas { color: var(--discret); font-weight: 500; }
+.comparaison .pied { padding: 10px 16px 14px; }
 
 /* Paire */
 .calculateur { gap: 14px; border-bottom: 0; }

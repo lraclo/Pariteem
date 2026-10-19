@@ -1,7 +1,7 @@
 import { BOOKMAKERS, bookmakerPourUrl } from '@/lib/bookmakers';
 import { LECTEURS } from '@/lib/bookmakers/lecteurs';
 import type { Match } from '@/lib/domaine/match';
-import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messages';
+import type { DemandeChercher, DemandePing, Progression, ReponseChercher } from '@/lib/messages';
 
 export default defineContentScript({
   // `*.domaine` couvre aussi le domaine nu.
@@ -20,7 +20,12 @@ export default defineContentScript({
       });
     }
 
-    browser.runtime.onMessage.addListener((message: DemandeChercher, _envoyeur, repondre) => {
+    browser.runtime.onMessage.addListener((message: DemandeChercher | DemandePing, _envoyeur, repondre) => {
+      // « Tout lire » attend que la page nouvellement ouverte ait chargé ce script.
+      if (message?.type === 'ping') {
+        repondre(true);
+        return;
+      }
       if (message?.type !== 'chercher') return;
       // Une seule lecture à la fois, même si on clique deux fois sur « Chercher ».
       enCours ??= chercher().finally(() => (enCours = null));
