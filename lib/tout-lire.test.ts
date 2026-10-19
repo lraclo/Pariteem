@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BOOKMAKERS, type Bookmaker, type IdBookmaker } from './bookmakers';
+import { MAINTENANT as MAINTENANT_MATCHS, unMatch } from './domaine/test-utils';
 import {
   Arret,
   attendreReponse,
@@ -7,6 +8,7 @@ import {
   avecDelai,
   finir,
   interrompre,
+  lectureIncomplete,
   lireTout,
   RECENT_MS,
   SIMULTANES,
@@ -202,7 +204,31 @@ describe('interrompre', () => {
       debut: 0,
       enCours: false,
       fenetre: null,
+      fenetreVisible: null,
       sites: { winamax: { etat: 'lu', matchs: 700 }, unibet: { etat: 'erreur', message: 'Lecture interrompue' } },
     });
+  });
+});
+
+describe('lectureIncomplete', () => {
+  /** `n` Matchs qui commencent dans `dansHeures` heures (négatif : déjà commencés). */
+  const matchs = (n: number, dansHeures = 24) => Array.from({ length: n }, (_, i) => unMatch(`m${i}`, [3, 3, 3], dansHeures));
+
+  it('repère une page mal chargée : 18 Matchs au lieu de 636', () => {
+    expect(lectureIncomplete(matchs(18), { lueA: 0, matchs: matchs(636) }, MAINTENANT_MATCHS)).toEqual({ lus: 18, attendus: 636 });
+  });
+
+  it('accepte une lecture proche de la précédente, ou une première lecture', () => {
+    expect(lectureIncomplete(matchs(600), { lueA: 0, matchs: matchs(636) }, MAINTENANT_MATCHS)).toBeNull();
+    expect(lectureIncomplete(matchs(18), null, MAINTENANT_MATCHS)).toBeNull();
+  });
+
+  it('ne compte pas les Matchs de la Lecture précédente déjà commencés', () => {
+    const precedente = { lueA: 0, matchs: [...matchs(20), ...matchs(600, -2)] };
+    expect(lectureIncomplete(matchs(18), precedente, MAINTENANT_MATCHS)).toBeNull();
+  });
+
+  it('ne juge pas sur une Lecture précédente trop petite', () => {
+    expect(lectureIncomplete(matchs(5), { lueA: 0, matchs: matchs(30) }, MAINTENANT_MATCHS)).toBeNull();
   });
 });

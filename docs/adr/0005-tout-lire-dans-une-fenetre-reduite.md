@@ -14,7 +14,13 @@ L'orchestration est dans le service worker et pas dans le panneau, pour que ferm
 
 `chercherBetclic` fait défiler la page pour charger toutes les cartes. Dans une fenêtre réduite, la page est masquée (`document.hidden`) : Chrome ralentit les minuteurs et ne produit plus d'images, ce qui peut empêcher le chargement au défilement. Décision : Betclic est d'abord essayé comme les autres. Si l'essai réel lit nettement moins de Matchs qu'un « Chercher » sur l'onglet visible, Betclic passe dans `A_LIRE_A_LA_MAIN` (`lib/tout-lire.ts`) : il est sauté et affiché « À lire à la main », et un clic sur sa ligne ouvre sa page football dans un onglet visible.
 
-Résultat de l'essai : à compléter après le premier essai réel.
+Résultat de l'essai (19 octobre 2026, Chrome sur Mac) : 18 Matchs lus dans la fenêtre réduite, contre 636 avec « Chercher » sur l'onglet visible. Le défilement ne charge presque rien dans une page masquée.
+
+Seconde et dernière tentative : les Bookmakers lus par défilement (`lectureParDefilement`, aujourd'hui Betclic seul) sont ouverts dans une petite fenêtre normale (520 × 560), non focalisée, posée dans le coin bas-droit de la fenêtre du Trésorier, et fermée après leur lecture. Elle reste visible pour Chrome pendant une minute environ. Si elle ne suffit pas non plus, Betclic passe dans `A_LIRE_A_LA_MAIN`.
+
+Résultat de la seconde tentative : à compléter.
+
+Dans tous les cas, une lecture de « Tout lire » qui ramène moins de la moitié des Matchs à venir de la Lecture précédente (`lectureIncomplete`) ne la remplace pas : le site est marqué en erreur et sa Lecture précédente est gardée. Lors du premier essai, les 18 Matchs avaient remplacé les 636.
 
 ## Considered Options
 
@@ -25,4 +31,5 @@ Résultat de l'essai : à compléter après le premier essai réel.
 ## Consequences
 
 - Les lectures passent par les cookies du navigateur, et quatorze sites lus d'affilée ressemblent davantage à un robot qu'un clic sur un seul site. Le panneau demande d'utiliser « Tout lire » avec modération, et prévient au premier clic si tout a été lu il y a moins de 5 minutes ; un second clic relit quand même. Mieux vaut ne pas être connecté à un compte de Bookmaker dans ce navigateur.
-- Aucune nouvelle permission : `tabs` suffit pour créer la fenêtre et ses onglets.
+- Aucune nouvelle permission : `tabs` suffit pour créer les fenêtres et leurs onglets.
+- La petite fenêtre de Betclic apparaît à l'écran pendant sa lecture, sans prendre le focus.

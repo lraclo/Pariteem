@@ -1,6 +1,8 @@
 import { storage } from '#imports';
 import type { Bookmaker, IdBookmaker } from './bookmakers';
 import { attendre, enParallele } from './bookmakers/commun';
+import type { Lecture } from './domaine/comparaison';
+import type { Match } from './domaine/match';
 
 /** Où en est un Bookmaker pendant « Tout lire ». */
 export type EtatSite =
@@ -17,6 +19,8 @@ export interface ToutLire {
   enCours: boolean;
   /** Fenêtre réduite ouverte pour la lecture, à fermer si le service worker redémarre en route. */
   fenetre: number | null;
+  /** Petite fenêtre visible d'un site lu par défilement (Betclic), à fermer de même. */
+  fenetreVisible?: number | null;
   sites: Partial<Record<IdBookmaker, EtatSite>>;
   erreur?: string;
 }
@@ -147,5 +151,24 @@ export function avancer(etat: ToutLire, id: IdBookmaker, matchs: number): boolea
 
 /** L'état à publier quand le service worker redémarre au milieu d'une lecture : elle est perdue. */
 export function interrompre(etat: ToutLire): ToutLire {
-  return { ...etat, enCours: false, fenetre: null, sites: finir(etat.sites, 'Lecture interrompue') };
+  return { ...etat, enCours: false, fenetre: null, fenetreVisible: null, sites: finir(etat.sites, 'Lecture interrompue') };
+}
+
+/** En deçà de ce nombre de Matchs à venir, une Lecture précédente ne sert pas de référence. */
+const REFERENCE_MINIMALE = 40;
+
+/**
+ * Les nombres de Matchs à venir lus et attendus quand une lecture en ramène moins de la moitié de la
+ * Lecture précédente (une page qui a mal chargé) ; null sinon. Une telle lecture ne remplace pas la précédente.
+ */
+export function lectureIncomplete(
+  matchs: readonly Match[],
+  precedente: Lecture | null,
+  maintenant = Date.now(),
+): { lus: number; attendus: number } | null {
+  if (!precedente) return null;
+  const aVenir = (liste: readonly Match[]) => liste.filter((m) => m.debut > maintenant).length;
+  const attendus = aVenir(precedente.matchs);
+  const lus = aVenir(matchs);
+  return attendus >= REFERENCE_MINIMALE && lus < attendus / 2 ? { lus, attendus } : null;
 }
