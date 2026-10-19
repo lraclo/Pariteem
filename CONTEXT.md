@@ -89,5 +89,5 @@ Le pari gratuit offert par le Bookmaker à un Titulaire dont le premier Combiné
 _Avoid_: bonus, pari gratuit
 
 **Phase freebet**:
-L'étape suivante sur une nouvelle Paire : les huit Titulaires perdants misent leur Freebet, et un nouveau Titulaire couvre la neuvième Combinaison par un dépôt.
+L'étape suivante sur une nouvelle Paire : les huit Titulaires perdants misent leur Freebet, et la neuvième Combinaison est couverte soit par le dépôt d'un nouveau Titulaire, soit par le Freebet d'un neuvième Titulaire déjà perdant (aucun argent réel engagé).
 _Avoid_: tour 2, phase 2

@@ -24,11 +24,12 @@ const signe = (v: number) => (v < 0 ? 'negatif' : 'positif');
 
 export function Calculateur({ paire, conditions, setConditions }: Props) {
   const [phase, setPhase] = useState<'depot' | 'freebet'>('depot');
+  const [avecDepot, setAvecDepot] = useState(true);
   const [a, b] = paire;
 
   const mise = conditions.montant;
   const resultat =
-    phase === 'depot' ? phaseDepot(paire, mise) : phaseFreebet(paire, mise, { miseRendue: conditions.miseRendue });
+    phase === 'depot' ? phaseDepot(paire, mise) : phaseFreebet(paire, mise, { miseRendue: conditions.miseRendue, avecDepot });
 
   const alertes: string[] = [];
   if (conditions.coteMinSelection && paire.some((m) => cotePlancher(m) < conditions.coteMinSelection!))
@@ -45,7 +46,10 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
     {
       libelle: 'Argent réel',
       valeur: formatEuros(resultat.misesReelles),
-      detail: phase === 'depot' ? `9 × ${formatEuros(mise)}` : conditions.miseRendue ? 'mises rendues' : '1 dépôt',
+      detail:
+        phase === 'depot' ? `9 × ${formatEuros(mise)}`
+        : conditions.miseRendue ? 'mises rendues'
+        : avecDepot ? '1 dépôt' : '9 Freebets',
       classe: '',
     },
     { libelle: 'Pire', valeur: formatNet(pire.net), detail: `cote ${formatCote(pire.combinaison.coteCombinee)}`, classe: signe(pire.net) },
@@ -76,7 +80,15 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
       <dl className="stats">
         {stats.map((s) => (
           <div key={s.libelle}>
-            <dt>{s.libelle}</dt>
+            <dt>
+              {s.libelle === 'Argent réel' && phase === 'freebet' ? (
+                <button type="button" className="bascule" aria-pressed={!avecDepot}
+                  title={avecDepot ? 'Passer à 9 Freebets, sans dépôt' : `Passer à 8 Freebets + 1 dépôt de ${formatEuros(mise)}`}
+                  onClick={() => setAvecDepot(!avecDepot)}>
+                  {s.libelle} ⇄
+                </button>
+              ) : s.libelle}
+            </dt>
             <dd className={s.classe}>{s.valeur}</dd>
             <dd className="detail">{s.detail}</dd>
           </div>
@@ -117,7 +129,9 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
       <p className="aide">
         {phase === 'depot'
           ? `${formatEuros(mise)} de dépôt par Titulaire.`
-          : `8 Freebets de ${formatEuros(mise)}, et le dépôt de ${formatEuros(mise)} sur ${depot?.combinaison.issues.join(' / ')}, la Combinaison la moins probable.`}
+          : depot
+            ? `8 Freebets de ${formatEuros(mise)}, et le dépôt de ${formatEuros(mise)} sur ${depot.combinaison.issues.join(' / ')}, la Combinaison la moins probable.`
+            : `9 Freebets de ${formatEuros(mise)}, aucun dépôt.`}
         {' '}Espérance : net moyen pondéré par les probabilités des Cotes, marge du Bookmaker retirée.
       </p>
 

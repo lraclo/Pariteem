@@ -102,6 +102,13 @@ describe('phaseFreebet', () => {
     expect(resultat.pireNet).toBeCloseTo(phaseDepot(paire, 100).pireNet);
   });
 
+  it("sans dépôt, mise neuf Freebets et n'engage aucun argent réel", () => {
+    const resultat = phaseFreebet(paire, 100, { avecDepot: false });
+    expect(resultat.lignes.every((l) => l.mise === 'freebet')).toBe(true);
+    expect(resultat.misesReelles).toBe(0);
+    expect(resultat.lignes[8]!.net).toBeCloseTo(100 * (4 * 2.8 - 1));
+  });
+
   it("n'a pas de perte quand toutes les Cotes combinées dépassent 2", () => {
     expect(phaseFreebet(paire, 100).pireNet).toBeGreaterThan(0);
   });

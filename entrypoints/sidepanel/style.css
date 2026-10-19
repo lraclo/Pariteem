@@ -99,6 +99,11 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .stats dt { font-size: 11.5px; color: var(--discret); }
 .stats dd { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; white-space: nowrap; }
 .stats dd.detail { font-size: 11px; font-weight: 400; color: var(--discret); letter-spacing: 0; }
+/* Toute la case « Argent réel » bascule entre un dépôt et neuf Freebets. */
+.stats div:has(.bascule) { position: relative; margin: -4px; padding: 4px; border-radius: 6px; }
+.stats div:has(.bascule):hover { background: var(--champ); }
+.bascule { padding: 0; text-align: left; white-space: nowrap; }
+.bascule::after { content: ''; position: absolute; inset: 0; }
 
 .combinaisons { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
 .combinaisons .col-cote { width: 46px; }

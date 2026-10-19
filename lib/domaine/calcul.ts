@@ -78,19 +78,21 @@ export interface OptionsFreebet {
   indexDepot?: number;
   /** Vrai si le Bookmaker rembourse en argent retirable plutôt qu'en Freebet. */
   miseRendue?: boolean;
+  /** Faux si un neuvième Titulaire couvre la dernière Combinaison par son Freebet, sans dépôt. */
+  avecDepot?: boolean;
 }
 
 /**
- * Huit Freebets et un dépôt d'un nouveau Titulaire. Par défaut le dépôt va sur la
- * Combinaison la moins probable, pour maximiser la chance d'obtenir un nouveau Freebet.
+ * Huit Freebets et un dépôt d'un nouveau Titulaire, ou neuf Freebets sans dépôt. Par défaut
+ * le dépôt va sur la Combinaison la moins probable, pour maximiser la chance d'obtenir un nouveau Freebet.
  */
 export function phaseFreebet(
   paire: Paire,
   mise: number,
-  { indexDepot, miseRendue = false }: OptionsFreebet = {},
+  { indexDepot, miseRendue = false, avecDepot = true }: OptionsFreebet = {},
 ): ResultatPhase {
   const cotes = combinaisons(paire).map((c) => c.coteCombinee);
-  const depot = indexDepot ?? cotes.indexOf(Math.max(...cotes));
+  const depot = avecDepot ? (indexDepot ?? cotes.indexOf(Math.max(...cotes))) : -1;
   return resultat(
     paire,
     mise,
