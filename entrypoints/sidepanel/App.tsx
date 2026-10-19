@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { BOOKMAKERS, bookmakerPourUrl, estSurPageFootball } from '@/lib/bookmakers';
 import { classement, meilleurePaire } from '@/lib/domaine/classement';
-import { cotePlancher, type Match, type Paire } from '@/lib/domaine/match';
+import { cotePlancher, type Paire } from '@/lib/domaine/match';
 import type { DemandeChercher, Progression, ReponseChercher } from '@/lib/messages';
+import { recherches, type Recherche } from '@/lib/recherches';
 import { CONDITIONS_PAR_DEFAUT, conditionsFreebet, FENETRES, reglages } from '@/lib/reglages';
 import { Calculateur } from './Calculateur';
-import { formatCote, formatDate } from './format';
+import { formatCote, formatDate, formatDepuis } from './format';
+import { NouvelleVersion } from './NouvelleVersion';
 import { Segmente } from './Segmente';
 import { useMaintenant } from './useMaintenant';
 import { useOngletSuivi } from './useOngletSuivi';
@@ -14,16 +16,18 @@ import { useStockage } from './useStockage';
 type Etat =
   | { type: 'pret' }
   | { type: 'lecture'; matchs: number | null }
-  | { type: 'erreur'; message: string }
-  | { type: 'resultats'; matchs: Match[] };
+  | { type: 'erreur'; message: string };
+
+/** Au-delà, les Cotes lues ont pu bouger : mieux vaut relancer une recherche avant de parier. */
+const COTES_PERIMEES_MS = 15 * 60_000;
 
 export default function App() {
   const onglet = useOngletSuivi();
   const bookmaker = bookmakerPourUrl(onglet?.url);
   const [criteres, setCriteres] = useStockage(reglages);
   const [conditions, setConditions] = useStockage(conditionsFreebet);
+  const [sauvegardes, setSauvegardes] = useStockage(recherches);
   const [etat, setEtat] = useState<Etat>({ type: 'pret' });
-  const [selection, setSelection] = useState<string[]>([]);
   const maintenant = useMaintenant();
   // Numéro de la recherche en cours : une réponse d'une recherche abandonnée est ignorée.
   const recherche = useRef(0);
@@ -32,7 +36,7 @@ export default function App() {
   // ne doit pas effacer les résultats.
   const dernierBookmaker = useRef(bookmaker?.id);
 
-  // Les résultats d'un Bookmaker n'ont pas de sens sur un autre.
+  // Une lecture en cours sur un Bookmaker n'a pas de sens sur un autre ; chacun garde sa dernière recherche.
   useEffect(() => {
     if (!bookmaker || bookmaker.id === dernierBookmaker.current) return;
     const avait = dernierBookmaker.current;
@@ -40,7 +44,6 @@ export default function App() {
     if (avait === undefined) return;
     recherche.current++;
     setEtat({ type: 'pret' });
-    setSelection([]);
   }, [bookmaker?.id]);
 
   useEffect(() => {
@@ -52,9 +55,11 @@ export default function App() {
     return () => browser.runtime.onMessage.removeListener(surMessage);
   }, [onglet?.id]);
 
-  if (!criteres || !conditions) return null;
+  if (!criteres || !conditions || !sauvegardes) return null;
 
-  const tous = etat.type === 'resultats' ? etat.matchs : [];
+  const derniere = bookmaker ? sauvegardes[bookmaker.id] : undefined;
+  const tous = derniere?.matchs ?? [];
+  const selection = derniere?.selection ?? [];
   const liste = classement(tous, { ...criteres, maintenant });
 
   if (!bookmaker || !onglet?.id) {
@@ -65,29 +70,44 @@ export default function App() {
           <p className="aide">Ouvrez le site d'un Bookmaker pris en charge pour chercher des Matchs :</p>
           <p className="aide">{BOOKMAKERS.map((b) => b.nom).join(', ')}.</p>
         </section>
+        <NouvelleVersion />
       </main>
     );
   }
 
   const tabId = onglet.id;
+  const idBookmaker = bookmaker.id;
   const doitAllerSurFootball = bookmaker.lectureSurPageFootball && !estSurPageFootball(bookmaker, onglet.url);
+
+  /** Remplace (ou efface) la dernière recherche du Bookmaker affiché. */
+  function enregistrer(r: Recherche | undefined, base = sauvegardes!) {
+    const { [idBookmaker]: _, ...autres } = base;
+    setSauvegardes(r ? { ...autres, [idBookmaker]: r } : autres);
+  }
 
   async function chercher() {
     const numero = ++recherche.current;
     setEtat({ type: 'lecture', matchs: null });
-    setSelection([]);
-    let suite: Etat;
+    enregistrer(undefined);
+    let reponse: ReponseChercher;
     try {
-      const reponse: ReponseChercher = await browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher);
-      suite = reponse.ok ? { type: 'resultats', matchs: reponse.matchs } : { type: 'erreur', message: reponse.erreur };
+      reponse = await browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher);
     } catch {
-      suite = { type: 'erreur', message: 'La page ne répond pas. Rechargez-la, puis cliquez de nouveau sur Chercher.' };
+      reponse = { ok: false, erreur: 'La page ne répond pas. Rechargez-la, puis cliquez de nouveau sur Chercher.' };
     }
-    if (numero === recherche.current) setEtat(suite);
+    if (numero !== recherche.current) return;
+    if (!reponse.ok) return setEtat({ type: 'erreur', message: reponse.erreur });
+    // Relu après l'attente : une autre fenêtre a pu enregistrer entre-temps la recherche d'un autre Bookmaker.
+    enregistrer({ matchs: reponse.matchs, luA: Date.now(), selection: [] }, await recherches.getValue());
+    setEtat({ type: 'pret' });
+  }
+
+  function choisir(selection: string[]) {
+    if (derniere) enregistrer({ ...derniere, selection });
   }
 
   function basculer(id: string) {
-    setSelection((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id].slice(-2)));
+    choisir(selection.includes(id) ? selection.filter((x) => x !== id) : [...selection, id].slice(-2));
   }
 
   function changerSeuil(seuil: number) {
@@ -96,7 +116,7 @@ export default function App() {
 
   function choisirMeilleurePaire() {
     const paire = meilleurePaire(tous, { ...criteres!, maintenant });
-    if (paire) setSelection(paire.map((m) => m.id));
+    if (paire) choisir(paire.map((m) => m.id));
   }
 
   // Seuls les Matchs encore au Classement comptent : un Match commencé en sort.
@@ -118,7 +138,7 @@ export default function App() {
               min={1}
               step={0.05}
               value={criteres.seuil}
-              onChange={(e) => e.target.valueAsNumber > 0 && setCriteres({ ...criteres, seuil: e.target.valueAsNumber })}
+              onChange={(e) => changerSeuil(e.target.valueAsNumber)}
             />
             <button type="button" aria-label="Monter le Seuil" onClick={() => changerSeuil(criteres.seuil + 0.05)}>+</button>
           </div>
@@ -159,9 +179,10 @@ export default function App() {
           <p className="aide">{etat.matchs === null ? 'Lecture des Matchs…' : `${etat.matchs} Matchs chargés…`}</p>
         )}
         {etat.type === 'erreur' && <p className="erreur">{etat.message}</p>}
+        {etat.type === 'pret' && derniere && <Fraicheur luA={derniere.luA} maintenant={maintenant} />}
       </section>
 
-      {etat.type === 'resultats' && (
+      {derniere && (
         <>
           <section className="classement" aria-label="Classement">
             <div className="titre-section">
@@ -225,8 +246,15 @@ export default function App() {
           )}
         </>
       )}
+      <NouvelleVersion />
     </main>
   );
+}
+
+/** Quand les Cotes affichées ont été lues ; en orange quand il faut relancer une recherche avant de parier. */
+function Fraicheur({ luA, maintenant }: { luA: number; maintenant: number }) {
+  const perimees = maintenant - luA >= COTES_PERIMEES_MS;
+  return <p className={perimees ? 'aide perimees' : 'aide'}>Dernière synchronisation {formatDepuis(luA, maintenant)}</p>;
 }
 
 function Entete({ site }: { site?: string }) {

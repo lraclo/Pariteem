@@ -8,3 +8,11 @@ export const formatEuros = (v: number) => euros.format(v);
 export const formatNet = (v: number) => net.format(v);
 export const formatCote = (v: number) => nombre.format(v);
 export const formatDate = (ms: number) => date.format(ms);
+
+/** « il y a moins d'une minute », « il y a 12 min », « il y a 3 h ». */
+export function formatDepuis(ms: number, maintenant: number): string {
+  const minutes = Math.floor(Math.max(0, maintenant - ms) / 60_000);
+  if (minutes < 1) return "il y a moins d'une minute";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  return `il y a ${Math.floor(minutes / 60)} h`;
+}

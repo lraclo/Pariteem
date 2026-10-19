@@ -17,17 +17,19 @@
   --positif: #0b7a55;
   --negatif: #b42318;
   --negatif-fond: #fdf3f1;
+  --attention: #b54708;
   font: 13.5px/1.4 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--fond); color: var(--texte); }
-main { display: flex; flex-direction: column; }
+main { display: flex; flex-direction: column; min-height: 100vh; }
 section { padding: 14px 16px 16px; border-bottom: 1px solid var(--filet); display: flex; flex-direction: column; gap: 10px; }
 h2 { font-size: 14px; font-weight: 650; margin: 0; }
 p { margin: 0; }
 .aide { color: var(--discret); font-size: 12px; }
 .erreur { color: var(--negatif); font-size: 12.5px; }
+.perimees { color: var(--attention); }
 .positif { color: var(--positif); }
 .negatif { color: var(--negatif); }
 a { color: var(--accent-texte); font-weight: 600; }
@@ -128,3 +130,10 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .champs label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--discret); }
 .champs input[type='number'] { height: 36px; padding: 0 10px; border: 0; border-radius: 7px; background: var(--champ); color: var(--texte); }
 .champs label.case { flex-direction: row; align-items: center; gap: 8px; color: var(--texte); font-size: 13px; }
+
+/* Nouvelle version */
+.nouvelle-version { position: sticky; bottom: 0; margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 16px; border-top: 1px solid var(--filet); background: var(--case); font-size: 12.5px; }
+.nouvelle-version > span { display: flex; align-items: center; gap: 6px; min-width: 0; margin-right: auto; }
+.nouvelle-version .fermer { display: grid; place-items: center; width: 24px; height: 24px; margin-right: -6px; border-radius: 5px; color: var(--discret); }
+.nouvelle-version .fermer:hover { background: var(--champ); color: var(--texte); }
+.nouvelle-version .pastille { width: 7px; height: 7px; border-radius: 2px; }
