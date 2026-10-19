@@ -99,5 +99,5 @@ Les Matchs d'un Bookmaker lus à un moment donné, avec l'heure de la lecture ; 
 _Avoid_: recherche, synchronisation, scan
 
 **Comparaison**:
-La vue qui classe les Bookmakers par Pire cas de leur Meilleure Paire, d'après leur dernière Lecture ; l'Espérance de la Phase dépôt y est affichée mais ne sert pas à classer.
+La vue qui classe les Bookmakers par Pire cas de leur Meilleure Paire, d'après leur dernière Lecture ; les Phases et leur Espérance se voient en ouvrant le Bookmaker.
 _Avoid_: comparateur, tableau comparatif

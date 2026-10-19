@@ -24,5 +24,5 @@ Résultat de l'essai : à compléter après le premier essai réel.
 
 ## Consequences
 
-- Les lectures passent par les cookies du navigateur, et quatorze sites lus d'affilée ressemblent davantage à un robot qu'un clic sur un seul site. Le panneau conseille de lancer « Tout lire » sans être connecté à un compte de Bookmaker.
+- Les lectures passent par les cookies du navigateur, et quatorze sites lus d'affilée ressemblent davantage à un robot qu'un clic sur un seul site. Le panneau demande d'utiliser « Tout lire » avec modération, et prévient au premier clic si tout a été lu il y a moins de 5 minutes ; un second clic relit quand même. Mieux vaut ne pas être connecté à un compte de Bookmaker dans ce navigateur.
 - Aucune nouvelle permission : `tabs` suffit pour créer la fenêtre et ses onglets.

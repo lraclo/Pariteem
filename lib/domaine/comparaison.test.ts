@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BOOKMAKERS } from '../bookmakers';
-import { phaseDepot, pireCas } from './calcul';
+import { pireCas } from './calcul';
 import type { Criteres } from './classement';
 import { comparer, type Lectures } from './comparaison';
 import { CONDITIONS_PAR_DEFAUT, ecartsAuxConditions } from './conditions';
@@ -41,7 +41,7 @@ describe('comparer', () => {
     expect(lignes.slice(2).every((l) => l.type === 'jamais-lu')).toBe(true);
   });
 
-  it('classe les Bookmakers par Pire cas décroissant, pas par Espérance', () => {
+  it('classe les Bookmakers par Pire cas décroissant', () => {
     const lectures: Lectures = {
       winamax: lecture([2.6, 2.6]),
       unibet: lecture([3.2, 3.1]),
@@ -82,15 +82,14 @@ describe('comparer', () => {
     expect(ligne?.type === 'paire' && ligne.paire.map((m) => m.id)).toEqual(['a', 'b']);
   });
 
-  it("calcule l'Espérance de la Phase dépôt au montant des conditions du Bookmaker", () => {
+  it("prend les conditions par défaut d'un Bookmaker qui n'en a pas", () => {
     const lectures: Lectures = { winamax: lecture([2.6, 2.7]), unibet: lecture([2.8, 2.9]) };
-    const conditions = { winamax: { ...CONDITIONS_PAR_DEFAUT, montant: 50 } };
+    const conditions = { winamax: { ...CONDITIONS_PAR_DEFAUT, coteMinCombine: 100 } };
     const lignes = comparer(lectures, criteres, conditions);
-    for (const l of lignes.slice(0, 2)) {
-      if (l.type !== 'paire') throw new Error('Paire attendue');
-      const montant = l.bookmaker.id === 'winamax' ? 50 : CONDITIONS_PAR_DEFAUT.montant;
-      expect(l.esperance).toBe(phaseDepot(l.paire, montant).esperance);
-    }
+    expect(lignes.slice(0, 2).map((l) => [l.bookmaker.id, l.type === 'paire' && l.ecarts])).toEqual([
+      ['unibet', []],
+      ['winamax', ['cote-min-combine']],
+    ]);
   });
 
   it('signale les cotes minimales non respectées sans changer le classement', () => {

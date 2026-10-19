@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { IdBookmaker } from '@/lib/bookmakers';
 import { comparer, type LigneComparaison } from '@/lib/domaine/comparaison';
 import { selections, type Lectures } from '@/lib/lectures';
@@ -6,8 +7,11 @@ import { CONDITIONS_PAR_DEFAUT, type ConditionsFreebet, type Reglages } from '@/
 import { toutLire, type ToutLire } from '@/lib/tout-lire';
 import { AgeLecture } from './AgeLecture';
 import { ChampsCriteres } from './ChampsCriteres';
-import { formatCote, formatNet, texteEcart } from './format';
+import { formatCote, formatDepuis, texteEcart } from './format';
 import { useStockage } from './useStockage';
+
+/** En deçà, relancer « Tout lire » demande une confirmation : enchaîner les lectures ressemble à un robot. */
+const TOUT_LU_RECEMMENT_MS = 5 * 60_000;
 
 interface Props {
   criteres: Reglages;
@@ -27,8 +31,21 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
   const sites = Object.values(course?.sites ?? {});
   const termines = sites.filter((e) => e.etat !== 'attente' && e.etat !== 'lecture').length;
 
+  // Avertissement affiché au premier clic quand tout a été lu il y a peu ; un second clic relit quand même.
+  const [avertissement, setAvertissement] = useState<string | null>(null);
+
   function envoyer(message: DemandeToutLire | DemandeArreter) {
     browser.runtime.sendMessage(message).catch(() => {});
+  }
+
+  function lancer() {
+    const maintenant = Date.now();
+    if (!avertissement && course && maintenant - course.debut < TOUT_LU_RECEMMENT_MS) {
+      setAvertissement(`Attention : vous avez déjà tout lu ${formatDepuis(course.debut, maintenant)}. Cliquez de nouveau pour relire quand même.`);
+      return;
+    }
+    setAvertissement(null);
+    envoyer({ type: 'tout-lire' });
   }
 
   /** Ouvre le site du Bookmaker et y coche la Paire, pour afficher tout de suite le Calculateur. */
@@ -48,11 +65,12 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         {course?.enCours ? (
           <button className="principal arreter" onClick={() => envoyer({ type: 'arreter' })}>Arrêter</button>
         ) : (
-          <button className="principal" onClick={() => envoyer({ type: 'tout-lire' })}>Tout lire</button>
+          <button className="principal" onClick={lancer}>{avertissement ? 'Tout relire quand même' : 'Tout lire'}</button>
         )}
         {course?.enCours && <p className="aide">Lecture en cours : {termines} sur {sites.length || lignes.length} Bookmakers terminés.</p>}
         {!course?.enCours && course?.erreur && <p className="erreur">{course.erreur}</p>}
-        <p className="aide">Mieux vaut le lancer sans être connecté à un compte de Bookmaker dans ce navigateur.</p>
+        {avertissement && !course?.enCours && <p className="attention">{avertissement}</p>}
+        <p className="aide">À utiliser avec modération.</p>
       </section>
 
       <section className="comparaison" aria-label="Comparaison">
@@ -66,7 +84,6 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         <div className="entete-liste" aria-hidden="true">
           <span>Bookmaker · Meilleure Paire</span>
           <span>Pire cas</span>
-          <span>Espérance</span>
         </div>
         <ol>
           {lignes.map((l) => (
@@ -92,9 +109,6 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
                   <Statut ligne={l} course={course} maintenant={maintenant} />
                 </span>
                 <span className="pire-cas">{l.type === 'paire' ? formatCote(l.pireCas) : '–'}</span>
-                <span className={l.type === 'paire' ? (l.esperance < 0 ? 'esperance negatif' : 'esperance positif') : 'esperance'}>
-                  {l.type === 'paire' ? formatNet(l.esperance) : '–'}
-                </span>
               </button>
             </li>
           ))}

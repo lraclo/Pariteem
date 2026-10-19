@@ -25,7 +25,7 @@ const signe = (v: number) => (v < 0 ? 'negatif' : 'positif');
 
 export function Calculateur({ paire, conditions, setConditions }: Props) {
   const [phase, setPhase] = useState<'depot' | 'freebet'>('depot');
-  const [avecDepot, setAvecDepot] = useState(true);
+  const [avecDepot, setAvecDepot] = useState(false);
   const [a, b] = paire;
 
   const mise = conditions.montant;

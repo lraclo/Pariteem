@@ -1,5 +1,5 @@
 import { BOOKMAKERS, type Bookmaker, type IdBookmaker } from '../bookmakers';
-import { phaseDepot, pireCas } from './calcul';
+import { pireCas } from './calcul';
 import { meilleurePaire, type Criteres } from './classement';
 import { CONDITIONS_PAR_DEFAUT, ecartsAuxConditions, type ConditionsFreebet, type Ecart } from './conditions';
 import type { Match, Paire } from './match';
@@ -20,8 +20,6 @@ export type LigneComparaison =
       lueA: number;
       paire: Paire;
       pireCas: number;
-      /** Espérance de la Phase dépôt, au montant des conditions de ce Bookmaker. */
-      esperance: number;
       ecarts: Ecart[];
     }
   | { type: 'sans-paire'; bookmaker: Bookmaker; lueA: number }
@@ -45,15 +43,13 @@ export function comparer(
     if (!lecture) return { type: 'jamais-lu', bookmaker };
     const paire = meilleurePaire(lecture.matchs, criteres);
     if (!paire) return { type: 'sans-paire', bookmaker, lueA: lecture.lueA };
-    const c = conditions[bookmaker.id] ?? CONDITIONS_PAR_DEFAUT;
     return {
       type: 'paire',
       bookmaker,
       lueA: lecture.lueA,
       paire,
       pireCas: pireCas(paire),
-      esperance: phaseDepot(paire, c.montant).esperance,
-      ecarts: ecartsAuxConditions(paire, c),
+      ecarts: ecartsAuxConditions(paire, conditions[bookmaker.id] ?? CONDITIONS_PAR_DEFAUT),
     };
   });
   const groupe = (type: LigneComparaison['type']) => lignes.filter((l) => l.type === type);

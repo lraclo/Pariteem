@@ -30,6 +30,7 @@ p { margin: 0; }
 .aide { color: var(--discret); font-size: 12px; }
 .erreur { color: var(--negatif); font-size: 12.5px; }
 .a-relancer { color: var(--attention); }
+.attention { color: var(--attention); font-size: 12.5px; }
 .perimee { color: var(--negatif); }
 .positif { color: var(--positif); }
 .negatif { color: var(--negatif); }
@@ -91,7 +92,7 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 
 /* Comparaison */
 .comparaison { padding: 0; gap: 0; }
-.comparaison .entete-liste, .comparaison li > button { display: grid; grid-template-columns: minmax(0, 1fr) 54px 66px; gap: 8px; padding-inline: 16px; }
+.comparaison .entete-liste, .comparaison li > button { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 8px; padding-inline: 16px; }
 .comparaison .entete-liste > :not(:first-child) { text-align: right; }
 .comparaison ol { list-style: none; margin: 0; padding: 0; }
 .comparaison li { border-bottom: 1px solid var(--filet-leger); }
@@ -103,10 +104,8 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .comparaison .bookmaker small { margin-top: 2px; font-size: 12px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small.echec { color: var(--negatif); white-space: normal; }
 .comparaison .alerte { color: var(--attention); font-weight: 400; cursor: help; }
-.comparaison .pire-cas, .comparaison .esperance { text-align: right; white-space: nowrap; }
-.comparaison .pire-cas { font-weight: 650; }
-.comparaison .esperance { font-size: 12.5px; font-weight: 600; }
-.comparaison li.jamais-lu .bookmaker strong, .comparaison li.jamais-lu .pire-cas, .comparaison li.jamais-lu .esperance { color: var(--discret); font-weight: 500; }
+.comparaison .pire-cas { text-align: right; white-space: nowrap; font-weight: 650; }
+.comparaison li.jamais-lu .bookmaker strong, .comparaison li.jamais-lu .pire-cas { color: var(--discret); font-weight: 500; }
 .comparaison .pied { padding: 10px 16px 14px; }
 
 /* Paire */
