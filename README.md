@@ -4,7 +4,20 @@ Extension Chrome qui cherche, sur Winamax ou Betclic, les Matchs de football don
 
 ## Installer
 
-L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les extensions liées aux jeux d'argent (voir [ADR 0002](docs/adr/0002-lecture-a-la-demande-et-installation-hors-store.md)). Les Trésoriers l'installent avec une commande à coller dans le Terminal, fournie par la Liste ; elle se met ensuite à jour toute seule. Mise en place, publication des versions et message à envoyer : [docs/distribution.md](docs/distribution.md).
+L'extension n'est pas sur le Chrome Web Store, dont le règlement interdit les extensions liées aux jeux d'argent (voir [ADR 0002](docs/adr/0002-lecture-a-la-demande-et-installation-hors-store.md) et [ADR 0003](docs/adr/0003-distribution-par-zip.md)). Elle s'installe une fois, en deux minutes :
+
+1. Télécharger [pariteem.zip](https://github.com/lraclo/Pariteem/releases/latest/download/pariteem.zip) et le décompresser (Mac : double-clic ; Windows : clic droit › **Extraire tout**). Ranger le dossier `pariteem` obtenu à un endroit où il restera, par exemple Documents : Chrome le relit à chaque démarrage, il ne faut pas le supprimer.
+2. Dans Chrome, ouvrir `chrome://extensions`, activer **Mode développeur** (en haut à droite), cliquer sur **Charger l'extension non empaquetée** et choisir le dossier `pariteem`.
+3. Épingler l'icône Pariteem dans la barre d'outils (la pièce de puzzle, puis l'épingle).
+
+Pour passer à une nouvelle version : télécharger le nouveau zip, remplacer le contenu du dossier `pariteem`, puis cliquer sur ⟳ sous Pariteem dans `chrome://extensions`.
+
+### Publier une version
+
+```bash
+npm version patch       # 0.1.0 → 0.1.1 : met à jour package.json, commit et tag v0.1.1
+git push --follow-tags  # le workflow Publier crée la Release avec pariteem.zip
+```
 
 ### En mode développeur
 
@@ -23,7 +36,7 @@ Pour travailler sur le code :
 
 Après avoir chargé ou rechargé l'extension, rechargez aussi les onglets Winamax et Betclic déjà ouverts.
 
-Pour mettre à jour en mode développeur : `git pull`, `npm run build`, puis le bouton ⟳ de Pariteem dans `chrome://extensions`.
+Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Pariteem dans `chrome://extensions`.
 
 ## Utiliser
 
@@ -44,7 +57,6 @@ Les réglages sont mémorisés, pas les résultats : les Cotes bougent, relancez
 npm run dev      # reconstruit et recharge l'extension à chaque modification (charger .output/chrome-mv3-dev une fois)
 npm test         # tests du Classement, du calculateur et des lecteurs de pages
 npm run compile  # vérification TypeScript
-npm run crx      # .crx signé et update.xml dans .output/ (clé ~/.config/pariteem/cle-crx.pem)
 ```
 
 - `lib/domaine/` : Classement, Pire cas, calculs des deux Phases. Aucune dépendance au navigateur.
