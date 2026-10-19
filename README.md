@@ -61,5 +61,5 @@ npm run compile  # vérification TypeScript
 ```
 
 - `lib/domaine/` : Classement, Pire cas, calculs des deux Phases. Aucune dépendance au navigateur.
-- `lib/bookmakers/` : un lecteur par plateforme de paris (plusieurs Bookmakers en partagent une), testé sur des extraits de réponses réelles dans `fixtures/`. Si un site change son API, c'est ici que ça casse ([ADR 0001](docs/adr/0001-lecture-des-cotes-par-bookmaker.md), [ADR 0003](docs/adr/0003-lecture-par-plateforme-via-les-api-des-sites.md)). `index.ts` liste les Bookmakers, `lecteurs.ts` associe chacun à sa lecture.
+- `lib/bookmakers/` : un lecteur par plateforme de paris (plusieurs Bookmakers en partagent une), testé sur des extraits de réponses réelles dans `fixtures/`. Si un site change son API, c'est ici que ça casse ([ADR 0001](docs/adr/0001-lecture-des-cotes-par-bookmaker.md), [ADR 0004](docs/adr/0004-lecture-par-plateforme-via-les-api-des-sites.md)). `index.ts` liste les Bookmakers, `lecteurs.ts` associe chacun à sa lecture.
 - `entrypoints/` : script de page, service worker (badge, panneau latéral ou fenêtre selon le navigateur) et panneau en React (`entrypoints/sidepanel/`).
