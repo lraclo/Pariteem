@@ -14,10 +14,7 @@ Pour passer à une nouvelle version : télécharger le nouveau zip, remplacer le
 
 ### Publier une version
 
-```bash
-npm version patch       # 0.1.0 → 0.1.1 : met à jour package.json, commit et tag v0.1.1
-git push --follow-tags  # le workflow Publier crée la Release avec pariteem.zip
-```
+Rien à faire : chaque fusion sur `main` qui touche au code publie une Release avec `pariteem.zip` (workflow **Publier**). Le numéro de version suit le modèle `0.2.<nombre de commits de main>` et monte donc tout seul. Pour marquer une nouveauté, changer les deux premiers chiffres de `"version"` dans `package.json` (par exemple `0.3.0`). Le dernier chiffre de ce fichier n'est pas utilisé.
 
 ### En mode développeur
 

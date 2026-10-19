@@ -1,33 +1,48 @@
-# Publie une version à chaque tag vX.Y.Z : le zip de l'extension devient un fichier de la Release,
+# Publie une version à chaque fusion sur main : le zip de l'extension devient un fichier de la Release,
 # toujours téléchargeable à https://github.com/lraclo/Pariteem/releases/latest/download/pariteem.zip
+#
+# Numéro de version : les deux premiers chiffres viennent de package.json (à changer à la main pour
+# marquer une nouveauté), le dernier est le nombre de commits de main. Il monte donc tout seul.
 name: Publier
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    # Une modification de la documentation seule ne change pas l'extension.
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+# Deux fusions rapprochées : la seconde attend la première au lieu de publier en même temps.
+concurrency:
+  group: publier
+  cancel-in-progress: false
 
 jobs:
   publier:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # tout l'historique, pour compter les commits
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm test
+      - id: version
+        run: |
+          base=$(node -p "require('./package.json').version.split('.').slice(0, 2).join('.')")
+          version="$base.$(git rev-list --count HEAD)"
+          npm version "$version" --no-git-tag-version
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - run: npm run zip
+      - run: mv ".output/pariteem-${{ steps.version.outputs.version }}-chrome.zip" .output/pariteem.zip
       - run: |
-          version=$(node -p "require('./package.json').version")
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
-            echo "Le tag $GITHUB_REF_NAME ne correspond pas à la version $version de package.json." >&2
-            exit 1
-          fi
-          mv ".output/pariteem-$version-chrome.zip" .output/pariteem.zip
-      - run: gh release create "$GITHUB_REF_NAME" .output/pariteem.zip --title "$GITHUB_REF_NAME" --generate-notes
+          gh release create "v${{ steps.version.outputs.version }}" .output/pariteem.zip \
+            --title "v${{ steps.version.outputs.version }}" --target "$GITHUB_SHA" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
