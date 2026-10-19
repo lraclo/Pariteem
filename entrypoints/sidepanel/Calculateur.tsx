@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { phaseDepot, phaseFreebet, type Ligne } from '@/lib/domaine/calcul';
-import { cotePlancher, ISSUES, type Issue, type Match, type Paire } from '@/lib/domaine/match';
+import { ecartsAuxConditions } from '@/lib/domaine/conditions';
+import { ISSUES, type Issue, type Match, type Paire } from '@/lib/domaine/match';
 import type { ConditionsFreebet } from '@/lib/reglages';
-import { formatCote, formatEuros, formatNet } from './format';
+import { formatCote, formatEuros, formatNet, texteEcart } from './format';
 import { Segmente } from './Segmente';
 
 interface Props {
@@ -31,11 +32,7 @@ export function Calculateur({ paire, conditions, setConditions }: Props) {
   const resultat =
     phase === 'depot' ? phaseDepot(paire, mise) : phaseFreebet(paire, mise, { miseRendue: conditions.miseRendue, avecDepot });
 
-  const alertes: string[] = [];
-  if (conditions.coteMinSelection && paire.some((m) => cotePlancher(m) < conditions.coteMinSelection!))
-    alertes.push(`Une Issue est sous la cote minimale par sélection (${formatCote(conditions.coteMinSelection)}).`);
-  if (conditions.coteMinCombine && resultat.pireCas < conditions.coteMinCombine)
-    alertes.push(`Le Pire cas est sous la cote minimale du combiné (${formatCote(conditions.coteMinCombine)}).`);
+  const alertes = ecartsAuxConditions(paire, conditions).map((e) => texteEcart(e, conditions));
 
   const parNet = [...resultat.lignes].sort((x, y) => x.net - y.net);
   const pire = parNet[0]!;

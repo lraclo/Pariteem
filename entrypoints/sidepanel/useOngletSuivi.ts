@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Browser } from 'wxt/browser';
 
-/** L'onglet que regarde l'utilisateur : l'onglet actif de la fenêtre du panneau latéral. */
-export function useOngletSuivi(): Browser.tabs.Tab | null {
-  const [onglet, setOnglet] = useState<Browser.tabs.Tab | null>(null);
+/** L'onglet que regarde l'utilisateur : l'onglet actif de la fenêtre du panneau latéral ; undefined pendant le premier chargement. */
+export function useOngletSuivi(): Browser.tabs.Tab | null | undefined {
+  const [onglet, setOnglet] = useState<Browser.tabs.Tab | null>();
 
   useEffect(() => {
     let suivi: number | undefined;
