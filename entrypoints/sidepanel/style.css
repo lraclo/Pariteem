@@ -168,7 +168,9 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .champs label.case { flex-direction: row; align-items: center; gap: 8px; color: var(--texte); font-size: 13px; }
 
 /* Crédit, poussé en bas du panneau */
-.credit { margin-top: auto; padding: 2px 16px 10px; text-align: center; font-size: 11px; color: var(--discret); opacity: 0.8; }
+/* Le même trait fin au-dessus du crédit dans les deux vues : la dernière section n'a pas sa propre bordure. */
+[role='tabpanel'] > section:last-of-type { border-bottom: 0; }
+.credit { margin-top: auto; padding: 7px 16px 8px; border-top: 1px solid var(--filet-leger); text-align: center; font-size: 11px; color: var(--discret); opacity: 0.8; }
 .credit + .nouvelle-version { margin-top: 0; }
 
 /* Nouvelle version */
