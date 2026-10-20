@@ -71,6 +71,7 @@ export default function App() {
         <Chercher
           onglet={onglet}
           bookmaker={bookmaker}
+          surRetourOnglet={() => setChoisi(null)}
           criteres={criteres}
           setCriteres={setCriteres}
           conditions={conditions}

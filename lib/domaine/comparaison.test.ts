@@ -147,6 +147,12 @@ describe('lecturesAvecPeuDeMatchs', () => {
     expect(Object.keys(lecturesAvecPeuDeMatchs(lectures, MAINTENANT))).toEqual(['betclic']);
   });
 
+  it('ignore une Lecture supprimée, restée comme clé sans valeur', () => {
+    const lectures: Lectures = { betclic: lue(18), winamax: lue(647), olybet: lue(586), betsson: lue(652), pmu: undefined };
+    expect(lecturesAvecPeuDeMatchs(lectures, MAINTENANT)).toEqual({ betclic: { lus: 18, habituel: 647 } });
+    expect(() => comparer(lectures, criteres, {})).not.toThrow();
+  });
+
   it('passe le résultat aux lignes de la Comparaison', () => {
     const lectures: Lectures = { betclic: lue(18), winamax: lue(647), olybet: lue(586), betsson: lue(652) };
     const lignes = comparer(lectures, criteres, {});

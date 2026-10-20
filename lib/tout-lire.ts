@@ -1,7 +1,7 @@
 import { storage } from '#imports';
 import type { Bookmaker, IdBookmaker } from './bookmakers';
 import { attendre, enParallele } from './bookmakers/commun';
-import type { Lecture } from './domaine/comparaison';
+import { lecturesAvecPeuDeMatchs, matchsAVenir, type Lectures } from './domaine/comparaison';
 import type { Match } from './domaine/match';
 
 /** Où en est un Bookmaker pendant « Tout lire ». */
@@ -158,17 +158,39 @@ export function interrompre(etat: ToutLire): ToutLire {
 const REFERENCE_MINIMALE = 40;
 
 /**
- * Les nombres de Matchs à venir lus et attendus quand une lecture en ramène moins de la moitié de la
- * Lecture précédente (une page qui a mal chargé) ; null sinon. Une telle lecture ne remplace pas la précédente.
+ * Les nombres de Matchs à venir lus et attendus quand une lecture de `id` paraît venir d'une page qui a mal
+ * chargé ; null sinon. Elle l'est si elle ramène moins de la moitié de la Lecture précédente de ce Bookmaker,
+ * ou, faute de référence, moins du quart de la médiane des autres Bookmakers (la règle de la pastille orange).
+ * Une telle lecture ne remplace pas la précédente.
  */
 export function lectureIncomplete(
+  id: IdBookmaker,
   matchs: readonly Match[],
-  precedente: Lecture | null,
+  lectures: Lectures,
   maintenant = Date.now(),
 ): { lus: number; attendus: number } | null {
-  if (!precedente) return null;
-  const aVenir = (liste: readonly Match[]) => liste.filter((m) => m.debut > maintenant).length;
-  const attendus = aVenir(precedente.matchs);
-  const lus = aVenir(matchs);
-  return attendus >= REFERENCE_MINIMALE && lus < attendus / 2 ? { lus, attendus } : null;
+  const lus = matchsAVenir(matchs, maintenant);
+  const precedente = lectures[id];
+  const attendus = precedente ? matchsAVenir(precedente.matchs, maintenant) : 0;
+  if (attendus >= REFERENCE_MINIMALE && lus < attendus / 2) return { lus, attendus };
+  const peu = lecturesAvecPeuDeMatchs({ ...lectures, [id]: { lueA: maintenant, matchs: [...matchs] } }, maintenant)[id];
+  return peu ? { lus, attendus: peu.habituel } : null;
+}
+
+/** Taille de la petite fenêtre visible d'un site lu par défilement (Betclic). */
+export const PETITE_FENETRE = { largeur: 520, hauteur: 560, marge: 24 };
+
+/**
+ * Où poser la petite fenêtre : en bas à gauche de la fenêtre du Trésorier, loin du panneau latéral qui occupe
+ * le bord droit et montre l'avancement. Sans dimensions connues, Chrome choisit.
+ */
+export function positionPetiteFenetre(principale: {
+  left?: number;
+  top?: number;
+  width?: number;
+  height?: number;
+} | null): { left: number; top: number } | Record<string, never> {
+  if (principale?.left === undefined || principale.top === undefined || !principale.height) return {};
+  const { hauteur, marge } = PETITE_FENETRE;
+  return { left: principale.left + marge, top: principale.top + Math.max(0, principale.height - hauteur - marge) };
 }

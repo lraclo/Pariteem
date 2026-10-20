@@ -51,13 +51,19 @@ function mediane(valeurs: readonly number[]): number {
   return triees.length % 2 ? triees[Math.floor(milieu)]! : (triees[milieu - 1]! + triees[milieu]!) / 2;
 }
 
+/** Le nombre de Matchs qui n'ont pas encore commencé. */
+export function matchsAVenir(matchs: readonly Match[], maintenant: number): number {
+  return matchs.filter((m) => m.debut > maintenant).length;
+}
+
 /**
  * Les Bookmakers dont la Lecture a moins du quart des Matchs à venir habituels, comparée à la médiane
  * des autres : 18 Matchs quand les autres en ont 600, comme Betclic lu dans une page masquée.
  */
 export function lecturesAvecPeuDeMatchs(lectures: Lectures, maintenant: number): Partial<Record<IdBookmaker, PeuDeMatchs>> {
-  const aVenir = Object.entries(lectures).map(
-    ([id, l]) => [id as IdBookmaker, l!.matchs.filter((m) => m.debut > maintenant).length] as const,
+  // Une Lecture supprimée reste comme clé sans valeur : elle ne compte pas.
+  const aVenir = (Object.entries(lectures) as [IdBookmaker, Lecture | undefined][]).flatMap(([id, l]) =>
+    l ? [[id, matchsAVenir(l.matchs, maintenant)] as const] : [],
   );
   const resultat: Partial<Record<IdBookmaker, PeuDeMatchs>> = {};
   for (const [id, lus] of aVenir) {
@@ -87,10 +93,11 @@ export function comparer(
     const lecture = lectures[bookmaker.id];
     if (!lecture) return { type: 'jamais-lu', bookmaker };
     const peuDeMatchs = suspectes[bookmaker.id] ?? null;
-    const paire = meilleurePaire(lecture.matchs, criteres);
+    // Un seul Classement : la Meilleure Paire sans Seuil est celle du Seuil dès que ses deux Cotes planchers
+    // l'atteignent, et sinon sa plus faible Cote plancher est le Seuil où une Paire apparaîtrait.
+    const sansSeuil = meilleurePaire(lecture.matchs, { ...criteres, seuil: 1 });
+    const paire = sansSeuil && cotePlancher(sansSeuil[1]) >= criteres.seuil ? sansSeuil : null;
     if (!paire) {
-      // La Meilleure Paire sans Seuil : sa plus faible Cote plancher est le Seuil où elle apparaîtrait.
-      const sansSeuil = meilleurePaire(lecture.matchs, { ...criteres, seuil: 1 });
       const seuilPossible = sansSeuil ? cotePlancher(sansSeuil[1]) : null;
       return { type: 'sans-paire', bookmaker, lueA: lecture.lueA, peuDeMatchs, seuilPossible };
     }

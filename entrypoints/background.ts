@@ -1,5 +1,5 @@
 import { BOOKMAKERS, bookmakerPourUrl, type Bookmaker, type IdBookmaker } from '@/lib/bookmakers';
-import { enregistrerLecture, lireLecture } from '@/lib/lectures';
+import { enregistrerLecture, lireLecture, lireLectures } from '@/lib/lectures';
 import type {
   DemandeArreter,
   DemandeChercher,
@@ -16,14 +16,14 @@ import {
   interrompre,
   lectureIncomplete,
   lireTout,
+  PETITE_FENETRE,
+  positionPetiteFenetre,
   toutLire,
   type ToutLire,
 } from '@/lib/tout-lire';
 
 /** Délai pour que la page s'ouvre et charge le script de page. */
 const CHARGEMENT_MS = 30_000;
-/** Taille de la petite fenêtre visible d'un site lu par défilement, posée dans le coin de la fenêtre du Trésorier. */
-const PETITE_FENETRE = { largeur: 520, hauteur: 560, marge: 24 };
 
 type Course = { etat: ToutLire; arrete: boolean };
 
@@ -71,22 +71,14 @@ export default defineBackground(() => {
       const onglet = await browser.tabs.create({ windowId: c.etat.fenetre!, url: bookmaker.urlFootball, active: false });
       return { tabId: onglet.id!, fermer: () => browser.tabs.remove(onglet.id!).catch(() => {}) };
     }
-    const { largeur, hauteur, marge } = PETITE_FENETRE;
     const principale = await browser.windows.getLastFocused().catch(() => null);
-    const coin =
-      principale?.left !== undefined && principale.top !== undefined && principale.width && principale.height
-        ? {
-            left: principale.left + Math.max(0, principale.width - largeur - marge),
-            top: principale.top + Math.max(0, principale.height - hauteur - marge),
-          }
-        : {};
     const fenetre = await browser.windows.create({
       url: bookmaker.urlFootball,
       type: 'normal',
       focused: false,
-      width: largeur,
-      height: hauteur,
-      ...coin,
+      width: PETITE_FENETRE.largeur,
+      height: PETITE_FENETRE.hauteur,
+      ...positionPetiteFenetre(principale),
     });
     const tabId = fenetre?.tabs?.[0]?.id;
     if (fenetre?.id === undefined || tabId === undefined) throw new Error("Chrome n'a pas ouvert de fenêtre.");
@@ -113,13 +105,16 @@ export default defineBackground(() => {
       });
       const ms = bookmaker.delaiLectureMs;
       const reponse = await avecDelai<ReponseChercher>(
-        browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher),
+        // Onglet ou fenêtre fermés en cours de lecture : le message de Chrome, en anglais, ne dirait rien au Trésorier.
+        browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher).catch(() => {
+          throw new Error(`La page de ${bookmaker.nom} a été fermée ou ne répond plus.`);
+        }),
         ms,
         `${bookmaker.nom} n'a pas fini sa lecture en ${ms / 1000} s.`,
       );
       if (!reponse.ok) throw new Error(reponse.erreur);
       // Une page qui a mal chargé ne doit pas effacer une bonne Lecture.
-      const incomplete = lectureIncomplete(reponse.matchs, await lireLecture(bookmaker.id));
+      const incomplete = lectureIncomplete(bookmaker.id, reponse.matchs, await lireLectures());
       if (incomplete) {
         throw new Error(
           `Lecture incomplète : ${incomplete.lus} Matchs au lieu d'environ ${incomplete.attendus}. La Lecture précédente est gardée ; relisez ${bookmaker.nom} sur son site.`,

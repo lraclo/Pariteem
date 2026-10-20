@@ -41,6 +41,7 @@ button:disabled { opacity: 0.6; cursor: default; }
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.principal { height: 44px; margin-top: 4px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; }
 button.principal.arreter { border: 1px solid var(--bord); background: var(--fond); color: var(--negatif); }
+button.lien { align-self: flex-start; padding: 0; color: var(--accent-texte); font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 button.secondaire { flex: none; white-space: nowrap; height: 32px; padding: 0 10px; border-radius: 7px; border: 1px solid var(--accent-ligne); background: var(--fond); color: var(--accent-texte); font-size: 12.5px; font-weight: 600; }
 input { font: inherit; color: inherit; }
 input[type='checkbox'] { accent-color: var(--accent); width: 17px; height: 17px; margin: 0; cursor: pointer; }
@@ -168,6 +169,9 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .champs label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--discret); }
 .champs input[type='number'] { height: 36px; padding: 0 10px; border: 0; border-radius: 7px; background: var(--champ); color: var(--texte); }
 .champs label.case { flex-direction: row; align-items: center; gap: 8px; color: var(--texte); font-size: 13px; }
+
+/* Pas de trait sous la dernière section d'une vue : rien ne la suit. */
+[role='tabpanel'] > section:last-of-type { border-bottom: 0; }
 
 /* Nouvelle version */
 .nouvelle-version { position: sticky; bottom: 0; margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 16px; border-top: 1px solid var(--filet); background: var(--case); font-size: 12.5px; }

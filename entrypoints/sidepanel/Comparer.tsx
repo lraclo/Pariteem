@@ -151,15 +151,11 @@ function etatAffiche(ligne: LigneComparaison, course: ToutLire | null): EtatSite
  */
 function Signal({ ligne, course }: { ligne: LigneComparaison; course: ToutLire | null }) {
   const etat = etatAffiche(ligne, course);
-  if (etat?.etat === 'erreur') return <span className="signal echec" title={etat.message} />;
+  if (etat?.etat === 'erreur') return <span className="signal echec" role="img" aria-label={etat.message} title={etat.message} />;
   if (ligne.type === 'jamais-lu' || !ligne.peuDeMatchs) return null;
   const { lus, habituel } = ligne.peuDeMatchs;
-  return (
-    <span
-      className="signal"
-      title={`Seulement ${lus} Matchs à venir lus, contre environ ${habituel} chez les autres Bookmakers : la page a peut-être mal chargé. Relisez ${ligne.bookmaker.nom}.`}
-    />
-  );
+  const texte = `Seulement ${lus} Matchs à venir lus, contre environ ${habituel} chez les autres Bookmakers : la page a peut-être mal chargé. Relisez ${ligne.bookmaker.nom}.`;
+  return <span className="signal" role="img" aria-label={texte} title={texte} />;
 }
 
 /**

@@ -22,6 +22,8 @@ interface Props {
   onglet: Browser.tabs.Tab | null;
   /** Le Bookmaker affiché : celui de l'onglet, ou celui choisi dans Comparer. */
   bookmaker: Bookmaker | null;
+  /** Revient au Bookmaker de l'onglet, quand un autre a été choisi dans Comparer. */
+  surRetourOnglet: () => void;
   criteres: Reglages;
   setCriteres: (c: Reglages) => void;
   conditions: Partial<Record<IdBookmaker, ConditionsFreebet>>;
@@ -33,7 +35,7 @@ interface Props {
 }
 
 /** Lecture du Bookmaker affiché, son Classement et le Calculateur de la Paire cochée. */
-export function Chercher({ onglet, bookmaker, criteres, setCriteres, conditions, setConditions, lectures, choix, setChoix, maintenant }: Props) {
+export function Chercher({ onglet, bookmaker, surRetourOnglet, criteres, setCriteres, conditions, setConditions, lectures, choix, setChoix, maintenant }: Props) {
   const [etat, setEtat] = useState<Etat>({ type: 'pret' });
   // Numéro de la recherche en cours : une réponse d'une recherche abandonnée est ignorée.
   const recherche = useRef(0);
@@ -72,7 +74,8 @@ export function Chercher({ onglet, bookmaker, criteres, setCriteres, conditions,
 
   const idBookmaker = bookmaker.id;
   // Choisi dans Comparer sans être sur son site : on affiche sa dernière Lecture, et relire demande d'ouvrir le site.
-  const tabId = onglet?.id !== undefined && bookmakerPourUrl(onglet.url)?.id === idBookmaker ? onglet.id : null;
+  const bookmakerOnglet = bookmakerPourUrl(onglet?.url);
+  const tabId = onglet?.id !== undefined && bookmakerOnglet?.id === idBookmaker ? onglet.id : null;
   const derniere = lectures[idBookmaker];
   const tous = derniere?.matchs ?? [];
   const liste = classement(tous, { ...criteres, maintenant });
@@ -137,6 +140,11 @@ export function Chercher({ onglet, bookmaker, criteres, setCriteres, conditions,
           </button>
         )}
 
+        {tabId === null && bookmakerOnglet && (
+          <button type="button" className="lien" onClick={surRetourOnglet}>
+            Revenir à {bookmakerOnglet.nom}, l'onglet ouvert
+          </button>
+        )}
         {etat.type === 'lecture' && (
           <p className="aide">{etat.matchs === null ? 'Lecture des Matchs…' : `${etat.matchs} Matchs chargés…`}</p>
         )}
