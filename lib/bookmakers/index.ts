@@ -30,16 +30,21 @@ export interface Bookmaker {
   lectureSurPageFootball: boolean;
   /** Délai accordé à une lecture par « Tout lire » ; Betclic défile jusqu'en bas de sa page et prend plus de temps. */
   delaiLectureMs: number;
+  /**
+   * Vrai si la lecture fait défiler la page : masquée dans une fenêtre réduite, elle ne charge presque rien
+   * (18 Matchs au lieu de 636 pour Betclic). « Tout lire » l'ouvre dans une petite fenêtre visible (ADR 0005).
+   */
+  lectureParDefilement: boolean;
 }
 
 function bookmaker(id: IdBookmaker, nom: string, domaine: string, urlFootball: string): Bookmaker {
-  return { id, nom, domaine, urlFootball, lectureSurPageFootball: false, delaiLectureMs: 90_000 };
+  return { id, nom, domaine, urlFootball, lectureSurPageFootball: false, delaiLectureMs: 90_000, lectureParDefilement: false };
 }
 
 /** Les Bookmakers agréés par l'ANJ dont l'extension sait lire le football. */
 export const BOOKMAKERS: readonly Bookmaker[] = [
   bookmaker('winamax', 'Winamax', 'winamax.fr', URL_FOOTBALL_WINAMAX),
-  { ...bookmaker('betclic', 'Betclic', 'betclic.fr', URL_FOOTBALL_BETCLIC), lectureSurPageFootball: true, delaiLectureMs: 150_000 },
+  { ...bookmaker('betclic', 'Betclic', 'betclic.fr', URL_FOOTBALL_BETCLIC), lectureSurPageFootball: true, delaiLectureMs: 150_000, lectureParDefilement: true },
   bookmaker('unibet', 'Unibet', 'unibet.fr', URL_FOOTBALL_UNIBET),
   bookmaker('pmu', 'PMU', 'pmu.fr', 'https://www.pmu.fr/sport/'),
   bookmaker('netbet', 'NetBet', 'netbet.fr', 'https://www.netbet.fr/football'),
@@ -49,7 +54,7 @@ export const BOOKMAKERS: readonly Bookmaker[] = [
   bookmaker('circusbet', 'CircusBet', 'circusbet.fr', 'https://www.circusbet.fr/paris-sportifs'),
   bookmaker('daznbet', 'DAZN Bet', 'daznbet.fr', 'https://www.daznbet.fr/sports'),
   bookmaker('olybet', 'Olybet', 'olybet.fr', 'https://www.olybet.fr/sportsbook/paris'),
-  bookmaker('bwin', 'bwin', 'bwin.fr', URL_FOOTBALL_BWIN),
+  bookmaker('bwin', 'Bwin', 'bwin.fr', URL_FOOTBALL_BWIN),
   bookmaker('pokerstars', 'PokerStars Sports', 'pokerstars.fr', URL_FOOTBALL_POKERSTARS),
   bookmaker('betsson', 'Betsson', 'betsson.fr', URL_FOOTBALL_BETSSON),
 ];

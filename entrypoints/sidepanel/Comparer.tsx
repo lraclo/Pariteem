@@ -5,7 +5,7 @@ import { cotePlancher } from '@/lib/domaine/match';
 import { selections, type Lectures } from '@/lib/lectures';
 import type { DemandeArreter, DemandeToutLire } from '@/lib/messages';
 import { CONDITIONS_PAR_DEFAUT, type ConditionsFreebet, type Reglages } from '@/lib/reglages';
-import { toutLire, type ToutLire } from '@/lib/tout-lire';
+import { toutLire, type EtatSite, type ToutLire } from '@/lib/tout-lire';
 import { AgeLecture } from './AgeLecture';
 import { ChampsCriteres } from './ChampsCriteres';
 import { formatCote, formatDepuis, texteEcart } from './format';
@@ -20,12 +20,12 @@ interface Props {
   conditions: Partial<Record<IdBookmaker, ConditionsFreebet>>;
   lectures: Lectures;
   maintenant: number;
-  /** Appelé après l'ouverture du site d'un Bookmaker, pour passer sur Chercher. */
-  surOuverture: () => void;
+  /** Affiche ce Bookmaker dans Chercher. */
+  surChoix: (id: IdBookmaker) => void;
 }
 
 /** Les Bookmakers classés par Pire cas de leur Meilleure Paire, d'après leur dernière Lecture. */
-export function Comparer({ criteres, setCriteres, conditions, lectures, maintenant, surOuverture }: Props) {
+export function Comparer({ criteres, setCriteres, conditions, lectures, maintenant, surChoix }: Props) {
   // Recalculé seulement quand les Lectures ou les critères changent, pas à chaque progression de la lecture.
   const lignes = useMemo(() => comparer(lectures, { ...criteres, maintenant }, conditions), [lectures, criteres, conditions, maintenant]);
   const lus = lignes.filter((l) => l.type !== 'jamais-lu').length;
@@ -55,13 +55,15 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
     envoyer({ type: 'tout-lire' });
   }
 
-  /** Ouvre le site du Bookmaker et y coche la Paire, pour afficher tout de suite le Calculateur. */
-  async function ouvrir(l: LigneComparaison) {
+  /**
+   * Affiche le Bookmaker dans Chercher avec sa Paire cochée, pour voir tout de suite le Calculateur. Son site
+   * ne s'ouvre pas : « Voir » sur un Match l'ouvre au besoin.
+   */
+  async function afficher(l: LigneComparaison) {
     if (l.type === 'paire') {
       await selections.setValue({ ...(await selections.getValue()), [l.bookmaker.id]: l.paire.map((m) => m.id) });
     }
-    surOuverture();
-    await browser.tabs.create({ url: l.bookmaker.urlFootball, active: true });
+    surChoix(l.bookmaker.id);
   }
 
   return (
@@ -95,10 +97,11 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
         <ol>
           {lignes.map((l) => (
             <li key={l.bookmaker.id} className={l.type === 'jamais-lu' ? 'jamais-lu' : ''}>
-              <button type="button" onClick={() => ouvrir(l)} title={`Ouvrir ${l.bookmaker.nom}`}>
+              <button type="button" onClick={() => afficher(l)} title={`Afficher ${l.bookmaker.nom} dans Chercher`}>
                 <span className="bookmaker">
                   <strong>
                     {l.bookmaker.nom}
+                    <Signal ligne={l} course={course} />
                     {l.type === 'paire' && l.ecarts.length > 0 && (
                       <span
                         className="alerte"
@@ -111,7 +114,10 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
                   {l.type === 'paire' ? (
                     l.paire.map((m) => <span key={m.id} className="match-court">{m.equipeDomicile} – {m.equipeExterieur}</span>)
                   ) : l.type === 'sans-paire' ? (
-                    <span className="match-court">Aucune Paire au Seuil {formatCote(criteres.seuil)}</span>
+                    <span className="match-court">
+                      Aucune Paire au Seuil {formatCote(criteres.seuil)}
+                      {l.seuilPossible !== null && ` · possible à ${formatCote(l.seuilPossible)}`}
+                    </span>
                   ) : null}
                   <Statut ligne={l} course={course} maintenant={maintenant} />
                 </span>
@@ -131,15 +137,34 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
   );
 }
 
+/** L'état de « Tout lire » à montrer : tous pendant la lecture, puis seulement les échecs non rattrapés depuis. */
+function etatAffiche(ligne: LigneComparaison, course: ToutLire | null): EtatSite | undefined {
+  const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
+  const etat = course?.sites[ligne.bookmaker.id];
+  const aJour = lueA !== null && course !== null && lueA >= course.debut;
+  return course?.enCours ? etat : !aJour && (etat?.etat === 'erreur' || etat?.etat === 'a-la-main') ? etat : undefined;
+}
+
+/**
+ * Petite pastille à côté du nom quand la Lecture pose problème : rouge si la dernière lecture a échoué,
+ * orange si elle a nettement moins de Matchs que les autres Bookmakers. L'infobulle dit pourquoi.
+ */
+function Signal({ ligne, course }: { ligne: LigneComparaison; course: ToutLire | null }) {
+  const etat = etatAffiche(ligne, course);
+  if (etat?.etat === 'erreur') return <span className="signal echec" role="img" aria-label={etat.message} title={etat.message} />;
+  if (ligne.type === 'jamais-lu' || !ligne.peuDeMatchs) return null;
+  const { lus, habituel } = ligne.peuDeMatchs;
+  const texte = `Seulement ${lus} Matchs à venir lus, contre environ ${habituel} chez les autres Bookmakers : la page a peut-être mal chargé. Relisez ${ligne.bookmaker.nom}.`;
+  return <span className="signal" role="img" aria-label={texte} title={texte} />;
+}
+
 /**
  * Où en est la lecture du Bookmaker : l'avancement de « Tout lire » pendant qu'il tourne, puis ses échecs
  * (jusqu'à une Lecture plus récente), et sinon l'âge de la dernière Lecture.
  */
 function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course: ToutLire | null; maintenant: number }) {
   const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
-  const etat = course?.sites[ligne.bookmaker.id];
-  const aJour = lueA !== null && course !== null && lueA >= course.debut;
-  const affiche = course?.enCours ? etat : !aJour && (etat?.etat === 'erreur' || etat?.etat === 'a-la-main') ? etat : undefined;
+  const affiche = etatAffiche(ligne, course);
   switch (affiche?.etat) {
     case 'attente':
       return <small>En attente</small>;
@@ -152,7 +177,7 @@ function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course
     case 'lu-recemment':
       return <small>Lu récemment</small>;
     case 'a-la-main':
-      return <small className="a-relancer">À lire à la main : cliquez pour ouvrir {ligne.bookmaker.nom}</small>;
+      return <small className="a-relancer">À lire à la main sur son site</small>;
   }
   return <small>{lueA === null ? 'Pas encore lu' : <AgeLecture lueA={lueA} maintenant={maintenant} />}</small>;
 }

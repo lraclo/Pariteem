@@ -1,5 +1,5 @@
 import { BOOKMAKERS, bookmakerPourUrl, type Bookmaker, type IdBookmaker } from '@/lib/bookmakers';
-import { enregistrerLecture, lireLecture } from '@/lib/lectures';
+import { enregistrerLecture, lireLecture, lireLectures } from '@/lib/lectures';
 import type {
   DemandeArreter,
   DemandeChercher,
@@ -8,10 +8,24 @@ import type {
   Progression,
   ReponseChercher,
 } from '@/lib/messages';
-import { attendreReponse, avancer, avecDelai, finir, interrompre, lireTout, toutLire, type ToutLire } from '@/lib/tout-lire';
+import {
+  attendreReponse,
+  avancer,
+  avecDelai,
+  finir,
+  interrompre,
+  lectureIncomplete,
+  lireTout,
+  PETITE_FENETRE,
+  positionPetiteFenetre,
+  toutLire,
+  type ToutLire,
+} from '@/lib/tout-lire';
 
 /** Délai pour que la page s'ouvre et charge le script de page. */
 const CHARGEMENT_MS = 30_000;
+
+type Course = { etat: ToutLire; arrete: boolean };
 
 export default defineBackground(() => {
   browser.action.setBadgeBackgroundColor({ color: '#1a7f37' });
@@ -29,7 +43,7 @@ export default defineBackground(() => {
 
   // « Tout lire » (ADR 0005) : mené ici plutôt que dans le panneau, pour que fermer le panneau ne l'arrête pas.
   // Le panneau suit l'avancement dans `toutLire` (zone session).
-  let course: { etat: ToutLire; arrete: boolean } | null = null;
+  let course: Course | null = null;
   /** Onglets de la fenêtre réduite, pour rattacher leurs messages de progression à leur Bookmaker. */
   const ongletsLus = new Map<number, IdBookmaker>();
 
@@ -40,13 +54,48 @@ export default defineBackground(() => {
   // Un service worker qui redémarre a perdu la lecture en cours : on ferme sa fenêtre et on le dit.
   toutLire.getValue().then((etat) => {
     if (!etat?.enCours || course) return;
-    if (etat.fenetre !== null) browser.windows.remove(etat.fenetre).catch(() => {});
+    fermerFenetres(etat);
     publier(interrompre(etat));
   });
 
-  async function lireDansFenetre(bookmaker: Bookmaker, windowId: number, arrete: () => boolean): Promise<number> {
-    const onglet = await browser.tabs.create({ windowId, url: bookmaker.urlFootball, active: false });
-    const tabId = onglet.id!;
+  function fermerFenetres(etat: ToutLire) {
+    for (const id of [etat.fenetre, etat.fenetreVisible]) if (id != null) browser.windows.remove(id).catch(() => {});
+  }
+
+  /**
+   * Ouvre la page football du Bookmaker : un onglet de la fenêtre réduite, ou, pour une lecture par défilement,
+   * une petite fenêtre non focalisée dans le coin de celle du Trésorier, que Chrome garde visible.
+   */
+  async function ouvrir(bookmaker: Bookmaker, c: Course): Promise<{ tabId: number; fermer: () => void }> {
+    if (!bookmaker.lectureParDefilement) {
+      const onglet = await browser.tabs.create({ windowId: c.etat.fenetre!, url: bookmaker.urlFootball, active: false });
+      return { tabId: onglet.id!, fermer: () => browser.tabs.remove(onglet.id!).catch(() => {}) };
+    }
+    const principale = await browser.windows.getLastFocused().catch(() => null);
+    const fenetre = await browser.windows.create({
+      url: bookmaker.urlFootball,
+      type: 'normal',
+      focused: false,
+      width: PETITE_FENETRE.largeur,
+      height: PETITE_FENETRE.hauteur,
+      ...positionPetiteFenetre(principale),
+    });
+    const tabId = fenetre?.tabs?.[0]?.id;
+    if (fenetre?.id === undefined || tabId === undefined) throw new Error("Chrome n'a pas ouvert de fenêtre.");
+    c.etat.fenetreVisible = fenetre.id;
+    publier(c.etat);
+    return {
+      tabId,
+      fermer: () => {
+        browser.windows.remove(fenetre.id!).catch(() => {});
+        c.etat.fenetreVisible = null;
+      },
+    };
+  }
+
+  async function lireDansFenetre(bookmaker: Bookmaker, c: Course): Promise<number> {
+    const arrete = () => c.arrete;
+    const { tabId, fermer } = await ouvrir(bookmaker, c);
     ongletsLus.set(tabId, bookmaker.id);
     try {
       await attendreReponse(() => browser.tabs.sendMessage(tabId, { type: 'ping' } satisfies DemandePing), {
@@ -56,22 +105,32 @@ export default defineBackground(() => {
       });
       const ms = bookmaker.delaiLectureMs;
       const reponse = await avecDelai<ReponseChercher>(
-        browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher),
+        // Onglet ou fenêtre fermés en cours de lecture : le message de Chrome, en anglais, ne dirait rien au Trésorier.
+        browser.tabs.sendMessage(tabId, { type: 'chercher' } satisfies DemandeChercher).catch(() => {
+          throw new Error(`La page de ${bookmaker.nom} a été fermée ou ne répond plus.`);
+        }),
         ms,
         `${bookmaker.nom} n'a pas fini sa lecture en ${ms / 1000} s.`,
       );
       if (!reponse.ok) throw new Error(reponse.erreur);
+      // Une page qui a mal chargé ne doit pas effacer une bonne Lecture.
+      const incomplete = lectureIncomplete(bookmaker.id, reponse.matchs, await lireLectures());
+      if (incomplete) {
+        throw new Error(
+          `Lecture incomplète : ${incomplete.lus} Matchs au lieu d'environ ${incomplete.attendus}. La Lecture précédente est gardée ; relisez ${bookmaker.nom} sur son site.`,
+        );
+      }
       return (await enregistrerLecture(bookmaker.id, reponse.matchs)).matchs.length;
     } finally {
       ongletsLus.delete(tabId);
-      browser.tabs.remove(tabId).catch(() => {});
+      fermer();
     }
   }
 
   async function demarrer() {
     if (course) return;
     const etat: ToutLire = { debut: Date.now(), enCours: true, fenetre: null, sites: {} };
-    const c = (course = { etat, arrete: false });
+    const c: Course = (course = { etat, arrete: false });
     const arrete = () => c.arrete;
     publier(etat);
     // Chaque appel d'API garde le service worker en vie, même pendant une longue lecture sans message.
@@ -84,7 +143,7 @@ export default defineBackground(() => {
       etat.fenetre = windowId;
       publier(etat);
       await lireTout(BOOKMAKERS, {
-        lire: (b) => lireDansFenetre(b, windowId, arrete),
+        lire: (b) => lireDansFenetre(b, c),
         lueA: async (id) => (await lireLecture(id))?.lueA ?? null,
         maintenant: Date.now,
         signaler: (id, e) => {
@@ -97,17 +156,17 @@ export default defineBackground(() => {
       etat.erreur = `Impossible d'ouvrir la fenêtre de lecture : ${e instanceof Error ? e.message : String(e)}`;
     } finally {
       clearInterval(garderEnVie);
-      if (etat.fenetre !== null) browser.windows.remove(etat.fenetre).catch(() => {});
+      fermerFenetres(etat);
       course = null;
-      publier({ ...etat, enCours: false, fenetre: null, sites: finir(etat.sites) });
+      publier({ ...etat, enCours: false, fenetre: null, fenetreVisible: null, sites: finir(etat.sites) });
     }
   }
 
   function arreter() {
     if (!course) return;
     course.arrete = true;
-    // Fermer la fenêtre ferme ses onglets : les lectures en cours échouent aussitôt et ne sont pas enregistrées.
-    if (course.etat.fenetre !== null) browser.windows.remove(course.etat.fenetre).catch(() => {});
+    // Fermer les fenêtres ferme leurs onglets : les lectures en cours échouent aussitôt et ne sont pas enregistrées.
+    fermerFenetres(course.etat);
   }
 
   browser.windows.onRemoved.addListener((windowId) => {

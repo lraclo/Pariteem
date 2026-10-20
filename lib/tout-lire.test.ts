@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BOOKMAKERS, type Bookmaker, type IdBookmaker } from './bookmakers';
+import { MAINTENANT as MAINTENANT_MATCHS, unMatch } from './domaine/test-utils';
 import {
   Arret,
   attendreReponse,
@@ -7,7 +8,10 @@ import {
   avecDelai,
   finir,
   interrompre,
+  lectureIncomplete,
   lireTout,
+  PETITE_FENETRE,
+  positionPetiteFenetre,
   RECENT_MS,
   SIMULTANES,
   type EtatSite,
@@ -202,7 +206,57 @@ describe('interrompre', () => {
       debut: 0,
       enCours: false,
       fenetre: null,
+      fenetreVisible: null,
       sites: { winamax: { etat: 'lu', matchs: 700 }, unibet: { etat: 'erreur', message: 'Lecture interrompue' } },
     });
+  });
+});
+
+describe('lectureIncomplete', () => {
+  /** `n` Matchs qui commencent dans `dansHeures` heures (négatif : déjà commencés). */
+  const matchs = (n: number, dansHeures = 24) => Array.from({ length: n }, (_, i) => unMatch(`m${i}`, [3, 3, 3], dansHeures));
+  const lue = (n: number, dansHeures = 24) => ({ lueA: 0, matchs: matchs(n, dansHeures) });
+
+  it('repère une page mal chargée : 18 Matchs au lieu de 636', () => {
+    expect(lectureIncomplete('betclic', matchs(18), { betclic: lue(636) }, MAINTENANT_MATCHS)).toEqual({ lus: 18, attendus: 636 });
+  });
+
+  it('accepte une lecture proche de la précédente, ou une première lecture sans autre référence', () => {
+    expect(lectureIncomplete('betclic', matchs(600), { betclic: lue(636) }, MAINTENANT_MATCHS)).toBeNull();
+    expect(lectureIncomplete('betclic', matchs(18), {}, MAINTENANT_MATCHS)).toBeNull();
+  });
+
+  it('ne compte pas les Matchs de la Lecture précédente déjà commencés', () => {
+    const precedente = { lueA: 0, matchs: [...matchs(20), ...matchs(600, -2)] };
+    expect(lectureIncomplete('betclic', matchs(18), { betclic: precedente }, MAINTENANT_MATCHS)).toBeNull();
+  });
+
+  it('compare aux autres Bookmakers quand la Lecture précédente est absente ou déjà mauvaise', () => {
+    const autres = { winamax: lue(647), olybet: lue(586), betsson: lue(652) };
+    expect(lectureIncomplete('betclic', matchs(18), autres, MAINTENANT_MATCHS)).toEqual({ lus: 18, attendus: 647 });
+    expect(lectureIncomplete('betclic', matchs(18), { ...autres, betclic: lue(18) }, MAINTENANT_MATCHS)).toEqual({
+      lus: 18,
+      attendus: 647,
+    });
+    expect(lectureIncomplete('betclic', matchs(600), { ...autres, betclic: lue(18) }, MAINTENANT_MATCHS)).toBeNull();
+  });
+});
+
+describe('positionPetiteFenetre', () => {
+  it('pose la fenêtre en bas à gauche, loin du panneau latéral à droite', () => {
+    const { hauteur, marge } = PETITE_FENETRE;
+    expect(positionPetiteFenetre({ left: 100, top: 50, width: 1600, height: 1000 })).toEqual({
+      left: 100 + marge,
+      top: 50 + 1000 - hauteur - marge,
+    });
+  });
+
+  it('reste en haut dans une fenêtre plus basse que la petite fenêtre', () => {
+    expect(positionPetiteFenetre({ left: 0, top: 30, width: 800, height: 400 })).toMatchObject({ top: 30 });
+  });
+
+  it('laisse Chrome choisir sans dimensions connues', () => {
+    expect(positionPetiteFenetre(null)).toEqual({});
+    expect(positionPetiteFenetre({ width: 800 })).toEqual({});
   });
 });

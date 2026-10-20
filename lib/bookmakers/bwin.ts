@@ -89,5 +89,5 @@ export async function chercherBwin(): Promise<Match[]> {
     take: '2000',
     sortBy: 'StartDate',
   });
-  return lireBwin(await json<RencontresBwin>('bwin', `/cds-api/bettingoffer/fixtures?${parametres}`));
+  return lireBwin(await json<RencontresBwin>('Bwin', `/cds-api/bettingoffer/fixtures?${parametres}`));
 }

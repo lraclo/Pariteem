@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Browser } from 'wxt/browser';
-import { BOOKMAKERS, bookmakerPourUrl, estSurPageFootball, type IdBookmaker } from '@/lib/bookmakers';
+import { BOOKMAKERS, bookmakerPourUrl, estSurPageFootball, type Bookmaker, type IdBookmaker } from '@/lib/bookmakers';
 import { classement, meilleurePaire } from '@/lib/domaine/classement';
 import { cotePlancher, type Paire } from '@/lib/domaine/match';
 import { enregistrerLecture, selections, type Lectures } from '@/lib/lectures';
@@ -20,6 +20,10 @@ type Selections = Partial<Record<IdBookmaker, string[]>>;
 
 interface Props {
   onglet: Browser.tabs.Tab | null;
+  /** Le Bookmaker affiché : celui de l'onglet, ou celui choisi dans Comparer. */
+  bookmaker: Bookmaker | null;
+  /** Revient au Bookmaker de l'onglet, quand un autre a été choisi dans Comparer. */
+  surRetourOnglet: () => void;
   criteres: Reglages;
   setCriteres: (c: Reglages) => void;
   conditions: Partial<Record<IdBookmaker, ConditionsFreebet>>;
@@ -30,9 +34,8 @@ interface Props {
   maintenant: number;
 }
 
-/** Lecture du Bookmaker de l'onglet, son Classement et le Calculateur de la Paire cochée. */
-export function Chercher({ onglet, criteres, setCriteres, conditions, setConditions, lectures, choix, setChoix, maintenant }: Props) {
-  const bookmaker = bookmakerPourUrl(onglet?.url);
+/** Lecture du Bookmaker affiché, son Classement et le Calculateur de la Paire cochée. */
+export function Chercher({ onglet, bookmaker, surRetourOnglet, criteres, setCriteres, conditions, setConditions, lectures, choix, setChoix, maintenant }: Props) {
   const [etat, setEtat] = useState<Etat>({ type: 'pret' });
   // Numéro de la recherche en cours : une réponse d'une recherche abandonnée est ignorée.
   const recherche = useRef(0);
@@ -60,7 +63,7 @@ export function Chercher({ onglet, criteres, setCriteres, conditions, setConditi
     return () => browser.runtime.onMessage.removeListener(surMessage);
   }, [onglet?.id]);
 
-  if (!bookmaker || !onglet?.id) {
+  if (!bookmaker) {
     return (
       <section>
         <p className="aide">Ouvrez le site d'un Bookmaker pris en charge pour chercher des Matchs :</p>
@@ -69,22 +72,24 @@ export function Chercher({ onglet, criteres, setCriteres, conditions, setConditi
     );
   }
 
-  const tabId = onglet.id;
   const idBookmaker = bookmaker.id;
+  // Choisi dans Comparer sans être sur son site : on affiche sa dernière Lecture, et relire demande d'ouvrir le site.
+  const bookmakerOnglet = bookmakerPourUrl(onglet?.url);
+  const tabId = onglet?.id !== undefined && bookmakerOnglet?.id === idBookmaker ? onglet.id : null;
   const derniere = lectures[idBookmaker];
   const tous = derniere?.matchs ?? [];
   const liste = classement(tous, { ...criteres, maintenant });
   // Seuls les Matchs encore au Classement comptent : un Match commencé, ou sorti par le Seuil ou la Fenêtre,
   // ne doit pas occuper une des deux places de la Paire sans être visible.
   const selection = (choix[idBookmaker] ?? []).filter((id) => liste.some((m) => m.id === id));
-  const doitAllerSurFootball = bookmaker.lectureSurPageFootball && !estSurPageFootball(bookmaker, onglet.url);
+  const doitAllerSurFootball = bookmaker.lectureSurPageFootball && !estSurPageFootball(bookmaker, onglet?.url);
 
   /** Remplace la sélection du Bookmaker affiché. */
   function choisir(s: string[], base = choix) {
     setChoix({ ...base, [idBookmaker]: s });
   }
 
-  async function chercher() {
+  async function chercher(tabId: number) {
     const numero = ++recherche.current;
     // La Lecture précédente reste affichée : une lecture qui échoue ne doit pas l'effacer.
     setEtat({ type: 'lecture', matchs: null });
@@ -94,12 +99,14 @@ export function Chercher({ onglet, criteres, setCriteres, conditions, setConditi
     } catch {
       reponse = { ok: false, erreur: 'La page ne répond pas. Rechargez-la, puis cliquez de nouveau sur Chercher.' };
     }
+    // Une lecture réussie est toujours gardée, même si le Trésorier est passé entre-temps à un autre Bookmaker.
+    if (reponse.ok) {
+      await enregistrerLecture(idBookmaker, reponse.matchs);
+      // Relu après l'attente : une autre fenêtre a pu entre-temps cocher une Paire sur un autre Bookmaker.
+      choisir([], await selections.getValue());
+    }
     if (numero !== recherche.current) return;
-    if (!reponse.ok) return setEtat({ type: 'erreur', message: reponse.erreur });
-    await enregistrerLecture(idBookmaker, reponse.matchs);
-    // Relu après l'attente : une autre fenêtre a pu entre-temps cocher une Paire sur un autre Bookmaker.
-    choisir([], await selections.getValue());
-    setEtat({ type: 'pret' });
+    setEtat(reponse.ok ? { type: 'pret' } : { type: 'erreur', message: reponse.erreur });
   }
 
   function basculer(id: string) {
@@ -119,16 +126,25 @@ export function Chercher({ onglet, criteres, setCriteres, conditions, setConditi
       <section className="reglages" aria-label="Critères de recherche">
         <ChampsCriteres criteres={criteres} setCriteres={setCriteres} />
 
-        {doitAllerSurFootball ? (
+        {tabId === null ? (
+          <button className="principal" onClick={() => browser.tabs.create({ url: bookmaker.urlFootball, active: true })}>
+            Ouvrir {bookmaker.nom} pour chercher
+          </button>
+        ) : doitAllerSurFootball ? (
           <button className="principal" onClick={() => browser.tabs.update(tabId, { url: bookmaker.urlFootball })}>
             Aller sur la page Football
           </button>
         ) : (
-          <button className="principal" onClick={chercher} disabled={etat.type === 'lecture'}>
+          <button className="principal" onClick={() => chercher(tabId)} disabled={etat.type === 'lecture'}>
             {etat.type === 'lecture' ? 'Lecture…' : 'Chercher'}
           </button>
         )}
 
+        {tabId === null && bookmakerOnglet && (
+          <button type="button" className="lien" onClick={surRetourOnglet}>
+            Revenir à {bookmakerOnglet.nom}, l'onglet ouvert
+          </button>
+        )}
         {etat.type === 'lecture' && (
           <p className="aide">{etat.matchs === null ? 'Lecture des Matchs…' : `${etat.matchs} Matchs chargés…`}</p>
         )}
