@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { BOOKMAKERS } from '../bookmakers';
 import { pireCas } from './calcul';
 import type { Criteres } from './classement';
-import { comparer, type Lectures } from './comparaison';
+import { comparer, lecturesAvecPeuDeMatchs, type Lectures } from './comparaison';
 import { CONDITIONS_PAR_DEFAUT, ecartsAuxConditions } from './conditions';
 import { HEURE, MAINTENANT, unMatch } from './test-utils';
 
@@ -114,5 +114,39 @@ describe('ecartsAuxConditions', () => {
     const conditions = { ...CONDITIONS_PAR_DEFAUT, coteMinSelection: 2.7, coteMinCombine: pireCas(paire) + 0.01 };
     expect(ecartsAuxConditions(paire, conditions)).toEqual(['cote-min-selection', 'cote-min-combine']);
     expect(ecartsAuxConditions(paire, { ...conditions, coteMinSelection: 2.6, coteMinCombine: pireCas(paire) })).toEqual([]);
+  });
+});
+
+describe('lecturesAvecPeuDeMatchs', () => {
+  /** Une Lecture de `n` Matchs à venir, et `commences` déjà commencés. */
+  const lue = (n: number, commences = 0) => ({
+    lueA: LU,
+    matchs: [
+      ...Array.from({ length: n }, (_, i) => unMatch(`m${i}`, [3, 3, 3])),
+      ...Array.from({ length: commences }, (_, i) => unMatch(`c${i}`, [3, 3, 3], -1)),
+    ],
+  });
+
+  it('repère une Lecture qui a moins du quart des Matchs habituels', () => {
+    const lectures: Lectures = { betclic: lue(18), winamax: lue(647), olybet: lue(586), betsson: lue(652) };
+    expect(lecturesAvecPeuDeMatchs(lectures, MAINTENANT)).toEqual({ betclic: { lus: 18, habituel: 647 } });
+  });
+
+  it("ne juge pas sans au moins trois autres Bookmakers lus", () => {
+    expect(lecturesAvecPeuDeMatchs({ betclic: lue(18), winamax: lue(647), olybet: lue(586) }, MAINTENANT)).toEqual({});
+  });
+
+  it('ne compte que les Matchs à venir', () => {
+    const lectures: Lectures = { betclic: lue(18, 600), winamax: lue(600), olybet: lue(600), betsson: lue(600) };
+    expect(Object.keys(lecturesAvecPeuDeMatchs(lectures, MAINTENANT))).toEqual(['betclic']);
+  });
+
+  it('passe le résultat aux lignes de la Comparaison', () => {
+    const lectures: Lectures = { betclic: lue(18), winamax: lue(647), olybet: lue(586), betsson: lue(652) };
+    const lignes = comparer(lectures, criteres, {});
+    const betclic = lignes.find((l) => l.bookmaker.id === 'betclic');
+    const winamax = lignes.find((l) => l.bookmaker.id === 'winamax');
+    expect(betclic?.type !== 'jamais-lu' && betclic?.peuDeMatchs).toEqual({ lus: 18, habituel: 647 });
+    expect(winamax?.type !== 'jamais-lu' && winamax?.peuDeMatchs).toBeNull();
   });
 });

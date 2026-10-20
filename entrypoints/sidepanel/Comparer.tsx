@@ -5,7 +5,7 @@ import { cotePlancher } from '@/lib/domaine/match';
 import { selections, type Lectures } from '@/lib/lectures';
 import type { DemandeArreter, DemandeToutLire } from '@/lib/messages';
 import { CONDITIONS_PAR_DEFAUT, type ConditionsFreebet, type Reglages } from '@/lib/reglages';
-import { toutLire, type ToutLire } from '@/lib/tout-lire';
+import { toutLire, type EtatSite, type ToutLire } from '@/lib/tout-lire';
 import { AgeLecture } from './AgeLecture';
 import { ChampsCriteres } from './ChampsCriteres';
 import { formatCote, formatDepuis, texteEcart } from './format';
@@ -101,6 +101,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
                 <span className="bookmaker">
                   <strong>
                     {l.bookmaker.nom}
+                    <Signal ligne={l} course={course} />
                     {l.type === 'paire' && l.ecarts.length > 0 && (
                       <span
                         className="alerte"
@@ -137,11 +138,33 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
  * Où en est la lecture du Bookmaker : l'avancement de « Tout lire » pendant qu'il tourne, puis ses échecs
  * (jusqu'à une Lecture plus récente), et sinon l'âge de la dernière Lecture.
  */
-function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course: ToutLire | null; maintenant: number }) {
+function etatAffiche(ligne: LigneComparaison, course: ToutLire | null): EtatSite | undefined {
   const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
   const etat = course?.sites[ligne.bookmaker.id];
   const aJour = lueA !== null && course !== null && lueA >= course.debut;
-  const affiche = course?.enCours ? etat : !aJour && (etat?.etat === 'erreur' || etat?.etat === 'a-la-main') ? etat : undefined;
+  return course?.enCours ? etat : !aJour && (etat?.etat === 'erreur' || etat?.etat === 'a-la-main') ? etat : undefined;
+}
+
+/**
+ * Petite pastille à côté du nom quand la Lecture pose problème : rouge si la dernière lecture a échoué,
+ * orange si elle a nettement moins de Matchs que les autres Bookmakers. L'infobulle dit pourquoi.
+ */
+function Signal({ ligne, course }: { ligne: LigneComparaison; course: ToutLire | null }) {
+  const etat = etatAffiche(ligne, course);
+  if (etat?.etat === 'erreur') return <span className="signal echec" title={etat.message} />;
+  if (ligne.type === 'jamais-lu' || !ligne.peuDeMatchs) return null;
+  const { lus, habituel } = ligne.peuDeMatchs;
+  return (
+    <span
+      className="signal"
+      title={`Seulement ${lus} Matchs à venir lus, contre environ ${habituel} chez les autres Bookmakers : la page a peut-être mal chargé. Relisez ${ligne.bookmaker.nom}.`}
+    />
+  );
+}
+
+function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course: ToutLire | null; maintenant: number }) {
+  const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
+  const affiche = etatAffiche(ligne, course);
   switch (affiche?.etat) {
     case 'attente':
       return <small>En attente</small>;

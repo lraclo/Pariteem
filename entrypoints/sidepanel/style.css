@@ -104,6 +104,8 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .comparaison .match-court { font-size: 12px; line-height: 17px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small { margin-top: 2px; font-size: 11px; line-height: 15px; color: var(--discret); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .comparaison .bookmaker small.echec { color: var(--negatif); white-space: normal; }
+.comparaison .signal { display: inline-block; width: 7px; height: 7px; margin: 0 0 2px 6px; border-radius: 50%; vertical-align: middle; background: var(--attention); cursor: help; }
+.comparaison .signal.echec { background: var(--negatif); }
 .comparaison .alerte { color: var(--attention); font-weight: 400; cursor: help; }
 .comparaison .cotes-paire { display: flex; flex-direction: column; gap: 1px; text-align: right; white-space: nowrap; font-size: 12px; line-height: 17px; color: var(--discret); }
 .comparaison .pire-cas { color: var(--texte); }
@@ -164,6 +166,10 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .champs label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--discret); }
 .champs input[type='number'] { height: 36px; padding: 0 10px; border: 0; border-radius: 7px; background: var(--champ); color: var(--texte); }
 .champs label.case { flex-direction: row; align-items: center; gap: 8px; color: var(--texte); font-size: 13px; }
+
+/* Crédit, poussé en bas du panneau */
+.credit { margin-top: auto; padding: 14px 16px; text-align: center; font-size: 11px; color: var(--discret); opacity: 0.8; }
+.credit + .nouvelle-version { margin-top: 0; }
 
 /* Nouvelle version */
 .nouvelle-version { position: sticky; bottom: 0; margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 16px; border-top: 1px solid var(--filet); background: var(--case); font-size: 12.5px; }
