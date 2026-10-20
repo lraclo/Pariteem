@@ -94,7 +94,7 @@ export default function App() {
           }}
         />
       </div>
-      <p className="credit">par Raclo</p>
+      <p className="credit">Créé par Raclo</p>
       <NouvelleVersion />
     </main>
   );
