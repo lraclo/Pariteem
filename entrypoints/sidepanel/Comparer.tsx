@@ -137,10 +137,7 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
   );
 }
 
-/**
- * Où en est la lecture du Bookmaker : l'avancement de « Tout lire » pendant qu'il tourne, puis ses échecs
- * (jusqu'à une Lecture plus récente), et sinon l'âge de la dernière Lecture.
- */
+/** L'état de « Tout lire » à montrer : tous pendant la lecture, puis seulement les échecs non rattrapés depuis. */
 function etatAffiche(ligne: LigneComparaison, course: ToutLire | null): EtatSite | undefined {
   const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
   const etat = course?.sites[ligne.bookmaker.id];
@@ -165,6 +162,10 @@ function Signal({ ligne, course }: { ligne: LigneComparaison; course: ToutLire |
   );
 }
 
+/**
+ * Où en est la lecture du Bookmaker : l'avancement de « Tout lire » pendant qu'il tourne, puis ses échecs
+ * (jusqu'à une Lecture plus récente), et sinon l'âge de la dernière Lecture.
+ */
 function Statut({ ligne, course, maintenant }: { ligne: LigneComparaison; course: ToutLire | null; maintenant: number }) {
   const lueA = ligne.type === 'jamais-lu' ? null : ligne.lueA;
   const affiche = etatAffiche(ligne, course);

@@ -96,12 +96,14 @@ export function Chercher({ onglet, bookmaker, criteres, setCriteres, conditions,
     } catch {
       reponse = { ok: false, erreur: 'La page ne répond pas. Rechargez-la, puis cliquez de nouveau sur Chercher.' };
     }
+    // Une lecture réussie est toujours gardée, même si le Trésorier est passé entre-temps à un autre Bookmaker.
+    if (reponse.ok) {
+      await enregistrerLecture(idBookmaker, reponse.matchs);
+      // Relu après l'attente : une autre fenêtre a pu entre-temps cocher une Paire sur un autre Bookmaker.
+      choisir([], await selections.getValue());
+    }
     if (numero !== recherche.current) return;
-    if (!reponse.ok) return setEtat({ type: 'erreur', message: reponse.erreur });
-    await enregistrerLecture(idBookmaker, reponse.matchs);
-    // Relu après l'attente : une autre fenêtre a pu entre-temps cocher une Paire sur un autre Bookmaker.
-    choisir([], await selections.getValue());
-    setEtat({ type: 'pret' });
+    setEtat(reponse.ok ? { type: 'pret' } : { type: 'erreur', message: reponse.erreur });
   }
 
   function basculer(id: string) {

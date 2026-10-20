@@ -113,7 +113,7 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .comparaison .pied { padding: 10px 16px 14px; }
 
 /* Paire */
-.calculateur { gap: 14px; border-bottom: 0; }
+.calculateur { gap: 14px; padding-bottom: 4px; border-bottom: 0; }
 .paire { display: flex; flex-direction: column; gap: 4px; }
 .paire h2 { margin-bottom: 2px; }
 .lettre { display: inline-block; width: 16px; margin-right: 6px; color: var(--accent-texte); font-weight: 650; }
@@ -168,7 +168,7 @@ label.cotes { cursor: pointer; color: var(--texte-2); }
 .champs label.case { flex-direction: row; align-items: center; gap: 8px; color: var(--texte); font-size: 13px; }
 
 /* Crédit, poussé en bas du panneau */
-.credit { margin-top: auto; padding: 6px 16px; text-align: center; font-size: 11px; color: var(--discret); opacity: 0.8; }
+.credit { margin-top: auto; padding: 2px 16px 10px; text-align: center; font-size: 11px; color: var(--discret); opacity: 0.8; }
 .credit + .nouvelle-version { margin-top: 0; }
 
 /* Nouvelle version */
