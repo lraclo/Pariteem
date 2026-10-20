@@ -94,7 +94,6 @@ export default function App() {
           }}
         />
       </div>
-      <p className="credit">Créé par Raclo</p>
       <NouvelleVersion />
     </main>
   );
@@ -103,7 +102,11 @@ export default function App() {
 function Entete({ site }: { site?: string }) {
   return (
     <header className="entete">
-      <span className="marque"><span className="pastille" aria-hidden="true" />Pariteem</span>
+      <span className="marque">
+        <span className="pastille" aria-hidden="true" />
+        Pariteem
+        <span className="credit">par Raclo</span>
+      </span>
       {site && <span className="aide">{site}</span>}
     </header>
   );
