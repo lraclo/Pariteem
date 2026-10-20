@@ -114,7 +114,10 @@ export function Comparer({ criteres, setCriteres, conditions, lectures, maintena
                   {l.type === 'paire' ? (
                     l.paire.map((m) => <span key={m.id} className="match-court">{m.equipeDomicile} – {m.equipeExterieur}</span>)
                   ) : l.type === 'sans-paire' ? (
-                    <span className="match-court">Aucune Paire au Seuil {formatCote(criteres.seuil)}</span>
+                    <span className="match-court">
+                      Aucune Paire au Seuil {formatCote(criteres.seuil)}
+                      {l.seuilPossible !== null && ` · possible à ${formatCote(l.seuilPossible)}`}
+                    </span>
                   ) : null}
                   <Statut ligne={l} course={course} maintenant={maintenant} />
                 </span>

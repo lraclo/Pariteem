@@ -54,7 +54,7 @@ export const BOOKMAKERS: readonly Bookmaker[] = [
   bookmaker('circusbet', 'CircusBet', 'circusbet.fr', 'https://www.circusbet.fr/paris-sportifs'),
   bookmaker('daznbet', 'DAZN Bet', 'daznbet.fr', 'https://www.daznbet.fr/sports'),
   bookmaker('olybet', 'Olybet', 'olybet.fr', 'https://www.olybet.fr/sportsbook/paris'),
-  bookmaker('bwin', 'bwin', 'bwin.fr', URL_FOOTBALL_BWIN),
+  bookmaker('bwin', 'Bwin', 'bwin.fr', URL_FOOTBALL_BWIN),
   bookmaker('pokerstars', 'PokerStars Sports', 'pokerstars.fr', URL_FOOTBALL_POKERSTARS),
   bookmaker('betsson', 'Betsson', 'betsson.fr', URL_FOOTBALL_BETSSON),
 ];

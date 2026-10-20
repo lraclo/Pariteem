@@ -56,7 +56,7 @@ describe('comparer', () => {
   it('range par ordre alphabétique les Bookmakers sans Paire et ceux jamais lus', () => {
     const sansPaire = { lueA: LU, matchs: [] };
     const lignes = comparer({ winamax: sansPaire, betclic: sansPaire, bwin: sansPaire }, criteres, {});
-    expect(lignes.slice(0, 3).map((l) => l.bookmaker.nom)).toEqual(['Betclic', 'bwin', 'Winamax']);
+    expect(lignes.slice(0, 3).map((l) => l.bookmaker.nom)).toEqual(['Betclic', 'Bwin', 'Winamax']);
     const jamaisLus = lignes.slice(3).map((l) => l.bookmaker.nom);
     expect(jamaisLus).toEqual([...jamaisLus].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })));
   });
@@ -64,6 +64,12 @@ describe('comparer', () => {
   it("n'a pas de Paire quand un seul Match atteint le Seuil", () => {
     const lectures: Lectures = { winamax: { lueA: LU, matchs: [unMatch('seul', [3, 3, 3]), unMatch('bas', [2, 3, 4])] } };
     expect(comparer(lectures, criteres, {})[0]).toMatchObject({ type: 'sans-paire', lueA: LU });
+  });
+
+  it("donne le Seuil auquel une Paire existerait : la deuxième plus forte Cote plancher de la Fenêtre", () => {
+    const matchs = [unMatch('a', [2.44, 3, 3]), unMatch('b', [2.42, 3.1, 2.9]), unMatch('c', [2.3, 3, 3]), unMatch('loin', [2.48, 3, 3], 30 * 24)];
+    expect(comparer({ bwin: { lueA: LU, matchs } }, criteres, {})[0]).toMatchObject({ type: 'sans-paire', seuilPossible: 2.42 });
+    expect(comparer({ bwin: { lueA: LU, matchs: [matchs[0]!] } }, criteres, {})[0]).toMatchObject({ seuilPossible: null });
   });
 
   it('suit le Seuil des critères', () => {

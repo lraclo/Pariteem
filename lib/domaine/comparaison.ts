@@ -2,7 +2,7 @@ import { BOOKMAKERS, type Bookmaker, type IdBookmaker } from '../bookmakers';
 import { pireCas } from './calcul';
 import { meilleurePaire, type Criteres } from './classement';
 import { CONDITIONS_PAR_DEFAUT, ecartsAuxConditions, type ConditionsFreebet, type Ecart } from './conditions';
-import type { Match, Paire } from './match';
+import { cotePlancher, type Match, type Paire } from './match';
 
 /** Les Matchs d'un Bookmaker lus à un moment donné. */
 export interface Lecture {
@@ -30,7 +30,14 @@ export type LigneComparaison =
       ecarts: Ecart[];
       peuDeMatchs: PeuDeMatchs | null;
     }
-  | { type: 'sans-paire'; bookmaker: Bookmaker; lueA: number; peuDeMatchs: PeuDeMatchs | null }
+  | {
+      type: 'sans-paire';
+      bookmaker: Bookmaker;
+      lueA: number;
+      peuDeMatchs: PeuDeMatchs | null;
+      /** Seuil le plus haut auquel une Paire existerait dans la Fenêtre ; null s'il y a moins de deux Matchs. */
+      seuilPossible: number | null;
+    }
   | { type: 'jamais-lu'; bookmaker: Bookmaker };
 
 /** Il faut au moins ce nombre d'autres Bookmakers lus pour juger qu'une Lecture a peu de Matchs. */
@@ -81,7 +88,12 @@ export function comparer(
     if (!lecture) return { type: 'jamais-lu', bookmaker };
     const peuDeMatchs = suspectes[bookmaker.id] ?? null;
     const paire = meilleurePaire(lecture.matchs, criteres);
-    if (!paire) return { type: 'sans-paire', bookmaker, lueA: lecture.lueA, peuDeMatchs };
+    if (!paire) {
+      // La Meilleure Paire sans Seuil : sa plus faible Cote plancher est le Seuil où elle apparaîtrait.
+      const sansSeuil = meilleurePaire(lecture.matchs, { ...criteres, seuil: 1 });
+      const seuilPossible = sansSeuil ? cotePlancher(sansSeuil[1]) : null;
+      return { type: 'sans-paire', bookmaker, lueA: lecture.lueA, peuDeMatchs, seuilPossible };
+    }
     return {
       type: 'paire',
       bookmaker,

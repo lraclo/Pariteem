@@ -37,13 +37,13 @@ Pour mettre à jour : `git pull`, `npm run build`, puis le bouton ⟳ de Paritee
 
 ## Utiliser
 
-1. Ouvrir le site d'un Bookmaker pris en charge : l'icône affiche un ✓. Sites pris en charge : Winamax, Betclic, Unibet, PMU, NetBet, Genybet, Feelingbet, Vbet, CircusBet, DAZN Bet, Olybet, bwin, PokerStars Sports et Betsson (bet365 bloque toute lecture automatique).
+1. Ouvrir le site d'un Bookmaker pris en charge : l'icône affiche un ✓. Sites pris en charge : Winamax, Betclic, Unibet, PMU, NetBet, Genybet, Feelingbet, Vbet, CircusBet, DAZN Bet, Olybet, Bwin, PokerStars Sports et Betsson (bet365 bloque toute lecture automatique).
 2. Cliquer sur l'icône : le panneau latéral s'ouvre à droite de la page. L'extension ne fonctionne que dans Chrome (Arc, par exemple, n'affiche pas les panneaux latéraux d'extension).
 3. Régler le **Seuil** (Cote plancher minimale), la **Fenêtre** (3 semaines par défaut, 48 h pour un cycle rapide) et le **Tri**.
 4. **Chercher**.
    - Betclic : il faut être sur la page « Tout le football » (le panneau propose d'y aller), puis la page défile toute seule jusqu’en bas (jusqu’à une minute).
    - Tous les autres : depuis n'importe quelle page du site, en quelques secondes (une vingtaine pour NetBet, Feelingbet et Genybet, dont les pages sont lues une à une). Sur Genybet, évitez d'enchaîner les recherches : son pare-feu bloque temporairement les requêtes trop nombreuses.
-   - L'horizon dépend du Bookmaker : la plupart proposent deux à trois semaines de Matchs, bwin une dizaine de jours.
+   - L'horizon dépend du Bookmaker : la plupart proposent deux à trois semaines de Matchs, Bwin une dizaine de jours.
 5. Le Classement affiche les dix meilleures Cotes planchers. Cocher deux Matchs, ou cliquer sur **Meilleure Paire**, pour voir les neuf Combinaisons en **Phase dépôt** ou **Phase freebet**.
 6. Les conditions de l'offre de bienvenue (montant, cote minimale, remboursement en cash ou en Freebet) se règlent par Bookmaker sous le tableau. Vérifiez-les sur le site du Bookmaker : elles changent souvent.
 7. **Comparer** (onglet en haut du panneau, accessible depuis n'importe quel site) : une ligne par Bookmaker (ceux pas encore lus en gris, à la fin), avec sa Meilleure Paire, son Pire cas et la Cote plancher de chacun des deux Matchs, classés par Pire cas. Le Seuil et la Fenêtre sont les mêmes que dans Chercher. Un ⚠ signale une Paire sous les cotes minimales de l'offre de bienvenue. Une pastille à côté du nom signale un problème de lecture : rouge si la dernière a échoué, orange si elle a nettement moins de Matchs que les autres Bookmakers (page mal chargée) ; l'infobulle dit pourquoi. Cliquer sur une ligne affiche ce Bookmaker dans Chercher, avec la Paire déjà cochée et son Calculateur (Phase dépôt, Phase freebet, Espérance), sans ouvrir son site : « Voir » sur un Match l'ouvre au besoin, et « Ouvrir … pour chercher » permet de le relire.
